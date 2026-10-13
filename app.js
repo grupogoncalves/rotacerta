@@ -5,7 +5,7 @@ const app = $('#app');
 const configured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
 const DEMO_KEY = 'rotacerta_demo_v1';
 const BASE = location.protocol==='file:'?'https://seu-dominio.example/index.html':`${location.origin}${location.pathname}`;
-const S = { cloud:configured, role:null, user:null, view:'overview', deliveries:[], drivers:[], unsub:[], modal:null, maps:{}, watch:null, gpsBusy:false, gpsLast:0, gpsPoint:null, photos:[], signed:false, rating:null, filter:'todos', term:'', currentTracking:null, trackStop:null };
+const S = { cloud:configured, role:null, user:null, view:'overview', deliveries:[], drivers:[], unsub:[], modal:null, maps:{}, watch:null, gpsBusy:false, gpsLast:0, gpsPoint:null, photos:[], signed:false, rating:null, filter:'todos', term:'', currentTracking:null, trackStop:null, setupView:false, bootstrapInProgress:false };
 let F = null, auth = null, db = null, functions = null;
 let localChannel = null, timerToast = null, memoryDemo = null;
 
@@ -61,12 +61,39 @@ async function initCloud(){
 async function boot(){
   try{if('serviceWorker'in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
     if(!configured){const d=readDemo();S.deliveries=d.deliveries;S.drivers=d.drivers;localChannel='BroadcastChannel'in window?new BroadcastChannel('rotacerta-demo'):null;if(localChannel)localChannel.onmessage=reloadDemo;window.addEventListener('storage',ev=>{if(ev.key===DEMO_KEY)reloadDemo();});const publicRoute=new URLSearchParams(location.search);if(publicRoute.has('track'))return renderTrackingDemo();if(publicRoute.has('nps'))return renderNpsDemo();renderLogin();}
-    else{await initCloud();const p=new URLSearchParams(location.search);if(p.has('track'))return cloudTracking(p.get('track'));if(p.has('nps'))return cloudNps(p.get('nps'));F.onAuthStateChanged(auth,async u=>{clearUnsubs();stopGps();if(!u){S.role=null;S.user=null;renderLogin();return;}try{const snap=await F.getDoc(F.doc(db,'users',u.uid));const profile=snap.data();if(!profile?.active||!['admin','driver'].includes(profile.role))throw Error('Seu acesso não está ativo. Contate o administrador.');S.user={uid:u.uid,email:u.email,name:profile.name||u.email};S.role=profile.role;S.view=S.role==='admin'?'overview':'driver';attachData();}catch(err){problem(err);await F.signOut(auth);}});}
+    else{await initCloud();const p=new URLSearchParams(location.search);if(p.has('track'))return cloudTracking(p.get('track'));if(p.has('nps'))return cloudNps(p.get('nps'));F.onAuthStateChanged(auth,async u=>{clearUnsubs();stopGps();if(!u){S.role=null;S.user=null;S.setupView=false;renderLogin();return;}if(S.bootstrapInProgress)return;try{const snap=await F.getDoc(F.doc(db,'users',u.uid));const profile=snap.data();if(!snap.exists()){S.user={uid:u.uid,email:u.email,name:u.displayName||u.email};S.role=null;S.setupView=true;renderAdminSetup();return;}if(!profile?.active||!['admin','driver'].includes(profile.role))throw Error('Seu acesso não está ativo. Contate o administrador.');S.user={uid:u.uid,email:u.email,name:profile.name||u.email};S.role=profile.role;S.setupView=false;S.view=S.role==='admin'?'overview':'driver';attachData();}catch(err){problem(err);await F.signOut(auth);}});}
   }catch(err){console.error(err);app.innerHTML=`<div class="error-page"><h2>Falha ao iniciar o aplicativo</h2><p>${e(err.message)}</p><p>Confira sua conexão e o arquivo firebase-config.js.</p></div>`;}
 }
 function renderLogin(){
- app.innerHTML=`<div class="auth-page"><section class="auth-art"><div class="logo" style="margin:0"><span class="brand-mark">↗</span><span>RotaCerta<small>LOGÍSTICA INTELIGENTE</small></span></div><div><span class="eyebrow">DO PEDIDO À ENTREGA</span><h1>Sua operação em <em>movimento.</em></h1><p>Controle cada entrega, acompanhe o motorista ao vivo e registre a satisfação de cada cliente.</p></div><div class="auth-illustration">🚚</div></section><section class="auth-side"><div class="auth-form"><div class="brand-mark" style="margin-bottom:23px">↗</div><h2>Bem-vindo de volta</h2><p>Entre para acessar suas entregas.</p>${configured?`<form id="loginForm"><div class="field"><label>E-mail</label><input name="email" class="auth-input" type="email" autocomplete="username" required placeholder="voce@empresa.com"></div><div class="field"><label>Senha</label><input name="password" class="auth-input" type="password" autocomplete="current-password" required placeholder="••••••••"></div><button class="btn btn-primary btn-block" type="submit">Entrar no sistema →</button></form><div class="callout" style="margin-top:20px">O administrador cria contas de motoristas. O primeiro administrador é configurado no Firebase.</div>`:`<div class="demo-box"><strong>✨ Demonstração interativa</strong><small>Teste todas as telas sem cadastrar uma conta. Dados ficam somente neste navegador.</small><div class="demo-buttons"><button data-action="login-admin" class="btn btn-primary btn-block">Entrar como administrador →</button><button data-action="login-driver" class="btn btn-outline btn-block">Entrar como motorista 🚚</button></div></div><div class="callout warn" style="margin-top:18px">Modo demonstração: o WhatsApp abre com uma mensagem pronta, sem envio automático. Para rastreamento entre celulares, configure o Firebase.</div>`}</div></section></div>`;
+ if(configured && S.setupView){renderAdminSetup();return;}
+ app.innerHTML=`<div class="auth-page"><section class="auth-art"><div class="logo" style="margin:0"><span class="brand-mark">↗</span><span>RotaCerta<small>LOGÍSTICA INTELIGENTE</small></span></div><div><span class="eyebrow">DO PEDIDO À ENTREGA</span><h1>Sua operação em <em>movimento.</em></h1><p>Controle cada entrega, acompanhe o motorista ao vivo e registre a satisfação de cada cliente.</p></div><div class="auth-illustration">🚚</div></section><section class="auth-side"><div class="auth-form"><div class="brand-mark" style="margin-bottom:23px">↗</div><h2>Bem-vindo de volta</h2><p>Entre para acessar suas entregas.</p>${configured?`<form id="loginForm"><div class="field"><label>E-mail</label><input name="email" class="auth-input" type="email" autocomplete="username" required placeholder="voce@empresa.com"></div><div class="field"><label>Senha</label><input name="password" class="auth-input" type="password" autocomplete="current-password" required placeholder="••••••••"></div><button class="btn btn-primary btn-block" type="submit">Entrar no sistema →</button></form><div class="callout" style="margin-top:20px">Ainda não tem administrador? Crie o primeiro acesso usando a chave de ativação configurada no servidor.</div><button type="button" data-action="setup-admin" class="btn btn-outline btn-block" style="margin-top:13px">＋ Criar primeiro administrador</button>`:`<div class="demo-box"><strong>✨ Demonstração interativa</strong><small>Teste todas as telas sem cadastrar uma conta. Dados ficam somente neste navegador.</small><div class="demo-buttons"><button data-action="login-admin" class="btn btn-primary btn-block">Entrar como administrador →</button><button data-action="login-driver" class="btn btn-outline btn-block">Entrar como motorista 🚚</button></div></div><div class="callout warn" style="margin-top:18px">Modo demonstração: o WhatsApp abre com uma mensagem pronta, sem envio automático. Para rastreamento entre celulares, configure o Firebase.</div>`}</div></section></div>`;
 }
+
+function renderAdminSetup(){
+ const existing=Boolean(auth?.currentUser);
+ app.innerHTML=`<div class="auth-page"><section class="auth-art"><div class="logo"><span class="brand-mark">↗</span><span>RotaCerta<small>CONFIGURAÇÃO INICIAL</small></span></div><div><span class="eyebrow">ACESSO PROTEGIDO</span><h1>Primeiro <em>administrador.</em></h1><p>O primeiro usuário é criado com autorização do responsável pelo projeto Firebase.</p></div><div class="auth-illustration">🔐</div></section><section class="auth-side"><div class="auth-form"><div class="brand-mark" style="margin-bottom:20px">↗</div><h2>Criar administrador</h2><p>Use sua chave de ativação privada, configurada no Firebase. Esta operação é permitida uma única vez.</p><form id="setupAdminForm"><div class="field"><label>Nome completo</label><input class="auth-input" name="name" required minlength="3" maxlength="100" autocomplete="name" placeholder="Nome do administrador" value="${e(existing?auth.currentUser.displayName||'':'')}"></div>${existing?`<div class="callout">Conta autenticada: <strong>${e(auth.currentUser.email||'')}</strong>. Informe a chave para ativar este usuário.</div>`:`<div class="field"><label>E-mail de acesso</label><input class="auth-input" type="email" name="email" required autocomplete="email" placeholder="admin@suaempresa.com"></div><div class="field"><label>Senha</label><input class="auth-input" name="password" type="password" required minlength="12" autocomplete="new-password" placeholder="Mínimo de 12 caracteres"></div>`}<div class="field" style="margin-top:17px"><label>Chave de ativação do administrador</label><input class="auth-input" name="setupKey" type="password" required minlength="24" autocomplete="off" placeholder="Chave privada configurada no Firebase"></div><button class="btn btn-primary btn-block" type="submit">🔐 Ativar administrador</button></form><div class="callout warn" style="margin-top:15px">A chave deve ser definida em <strong>ADMIN_SETUP_KEY</strong> nas Cloud Functions, nunca no HTML. Caso ainda não tenha uma chave, consulte o README do projeto.</div><button type="button" data-action="setup-back" class="btn btn-outline btn-block" style="margin-top:12px">Voltar para login</button></div></section></div>`;
+}
+async function setupFirstAdmin(form){
+ if(!configured)throw Error('Ativação disponível apenas com Firebase configurado.');
+ const data=new FormData(form),name=String(data.get('name')||'').trim(),setupKey=String(data.get('setupKey')||'');
+ if(name.length<3||name.length>100||setupKey.length<24)throw Error('Informe nome válido e chave de ativação de 24 caracteres ou mais.');
+ S.bootstrapInProgress=true;
+ try{
+  if(!auth.currentUser){
+   const email=String(data.get('email')||'').trim().toLowerCase(),password=String(data.get('password')||'');
+   if(!email||password.length<12)throw Error('Informe e-mail e senha de pelo menos 12 caracteres.');
+   try{await F.createUserWithEmailAndPassword(auth,email,password);}
+   catch(err){if(err?.code==='auth/email-already-in-use'){await F.signInWithEmailAndPassword(auth,email,password);}else throw err;}
+  }
+  const fn=F.httpsCallable(functions,'setupFirstAdmin');await fn({name,setupKey});
+  const u=auth.currentUser;
+  if(!u)throw Error('Não foi possível validar sua sessão. Entre novamente.');
+  S.user={uid:u.uid,email:u.email,name};S.role='admin';S.setupView=false;S.view='overview';
+  attachData();toast('Administrador ativado! Bem-vindo ao RotaCerta.');
+ }catch(err){S.setupView=true;renderAdminSetup();throw err;}
+ finally{S.bootstrapInProgress=false;}
+}
+
 function attachData(){
   if(!configured)return;
   if(S.role==='admin'){setUnsub(F.onSnapshot(F.collection(db,'deliveries'),snap=>{S.deliveries=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));render();},problem));setUnsub(F.onSnapshot(F.collection(db,'users'),snap=>{S.drivers=snap.docs.map(x=>({uid:x.id,...x.data()})).filter(x=>x.role==='driver'&&x.active);render();},problem));}
@@ -161,6 +188,8 @@ document.addEventListener('click',async ev=>{
  const el=ev.target.closest('[data-action]');if(!el)return;const action=el.dataset.action,d=findDelivery(el.dataset.id);try{
  switch(action){
  case 'login-admin':enterDemo('admin');break;
+ case 'setup-admin':S.setupView=true;renderAdminSetup();break;
+ case 'setup-back':S.setupView=false;if(auth?.currentUser && !S.role)await F.signOut(auth);else renderLogin();break;
  case 'login-driver':enterDemo('driver');break;
  case 'view':S.view=el.dataset.view;render();break;
  case 'logout':stopGps();clearUnsubs();closeModal();if(configured)await F.signOut(auth);else{S.user=null;S.role=null;renderLogin();}break;
@@ -187,8 +216,9 @@ document.addEventListener('click',async ev=>{
  }catch(err){problem(err);}
 });
 document.addEventListener('submit',async ev=>{
- const form=ev.target;if(!['loginForm','newDeliveryForm','newDriverForm','finishForm','npsForm'].includes(form.id))return;ev.preventDefault();const submit=form.querySelector('[type="submit"]')||document.querySelector(`[form="${form.id}"][type="submit"]`);if(submit)submit.disabled=true;try{
+ const form=ev.target;if(!['loginForm','setupAdminForm','newDeliveryForm','newDriverForm','finishForm','npsForm'].includes(form.id))return;ev.preventDefault();const submit=form.querySelector('[type="submit"]')||document.querySelector(`[form="${form.id}"][type="submit"]`);if(submit)submit.disabled=true;try{
  if(form.id==='loginForm'){const fd=new FormData(form);await F.signInWithEmailAndPassword(auth,fd.get('email'),fd.get('password'));}
+ if(form.id==='setupAdminForm')await setupFirstAdmin(form);
  if(form.id==='newDeliveryForm')await createDelivery(form);
  if(form.id==='newDriverForm')await createDriver(form);
  if(form.id==='finishForm')await finishDelivery(form);

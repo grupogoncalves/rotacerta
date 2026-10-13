@@ -48,6 +48,8 @@ Na pasta principal do projeto e com Firebase CLI autenticado:
 npm install -g firebase-tools
 firebase login
 firebase use rotacerta-ee675
+firebase functions:secrets:set ADMIN_SETUP_KEY
+# Crie uma chave aleatória longa (mínimo 24 caracteres), guarde em segurança.
 firebase functions:secrets:set DRIVE_BRIDGE_URL
 # Cole a URL /exec obtida no Apps Script
 firebase functions:secrets:set DRIVE_BRIDGE_KEY
@@ -57,7 +59,11 @@ firebase deploy --project rotacerta-ee675 --only firestore,functions,hosting
 
 Cloud Functions e Secret Manager podem exigir o **plano Blaze** e ter cobrança. Não precisamos habilitar o Firebase Storage.
 
-**No Console Firebase**, ative Authentication (e-mail/senha) e Firestore. Para o primeiro administrador, crie um usuário em Authentication e adicione o documento `users/<UID>` ao Firestore com os campos `name`, `email`, `role: "admin"`, `active: true`. Em seguida, entre no sistema e crie motoristas pelo painel (a Function `createDriver` exige senha inicial com pelo menos 12 caracteres).
+**No Console Firebase**, ative Authentication (e-mail/senha) e Firestore. Após publicar as Functions, abra o aplicativo e toque em **"Criar primeiro administrador"**. Informe nome, e-mail, senha (12+ caracteres) e a mesma chave privada que você definiu em `ADMIN_SETUP_KEY`. O sistema cria a conta no Authentication e, pela Function `setupFirstAdmin`, o perfil `users/<UID>` no Firestore. A ativação só funciona uma vez. Se a conta já tiver sido criada no Authentication, a tela tenta autenticar com o e-mail e senha informados e concluir a ativação. Depois o administrador cria motoristas no painel (a Function `createDriver` exige senha inicial de pelo menos 12 caracteres).
+
+**Alternativa manual, para resolver um login já cadastrado imediatamente:** no Firebase Console → Authentication → Usuários, localize o UID (ou crie o usuário com e-mail e senha). No Firestore → `users` → documento cujo ID seja exatamente o UID, adicione `name` (string), `email` (string), `role` (string com valor `admin`) e `active` (boolean `true`). Essa operação deve ser feita pelo proprietário do projeto no Console, nunca por regras de gravação abertas ao público.
+
+**Segurança:** a chave `ADMIN_SETUP_KEY` nunca pode ficar no repositório público ou no HTML. Quem obtiver essa chave antes da primeira ativação poderá tentar assumir a administração. Após a ativação, a Function bloqueia qualquer segunda criação e mantém a trava em `system/firstAdminActivated`.
 
 Registre o domínio publicado em **Authentication → Settings → Authorized Domains**. Hospedagem HTTPS é necessária para GPS e links públicos.
 
@@ -89,7 +95,7 @@ index.html / styles.css / app.js            Aplicativo PWA conectado
 firebase-config.js                          Configuração web Firebase
 firestore.rules                              Banco e papéis de acesso
 firebase.json / .firebaserc                 Hosting e deploy (sem Storage)
-functions/index.js                           Autenticação, Drive, sincronização NPS
+functions/index.js                           Ativação segura do primeiro administrador, motoristas, Drive, sincronização NPS
 setup/DriveBridge.gs                         Script da ponte segura para o Drive
 VERSAO_UNICA_FIREBASE.html                  HTML único conectado (sem PWA instalável)
 DEMO.html                                    Demonstração local sem Firebase/Drive
