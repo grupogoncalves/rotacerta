@@ -36,9 +36,11 @@ exports.setupFirstAdmin = onCall({region:REGION,secrets:[ADMIN_SETUP_KEY],maxIns
   await db.runTransaction(async tx=>{
     const [lock,existing]=await Promise.all([tx.get(setupRef),tx.get(userRef)]);
     if(lock.exists)throw new HttpsError('already-exists','O primeiro administrador já foi ativado.');
-    if(existing.exists)throw new HttpsError('failed-precondition','Este usuário já tem um perfil.');
+    if(existing.exists && (existing.data().role!=='driver' || existing.data().active!==false || existing.data().email!==user.email.toLowerCase()))throw new HttpsError('failed-precondition','Perfil já existente não está pendente de aprovação.');
     tx.create(setupRef,{adminUid:user.uid,createdAt:FieldValue.serverTimestamp()});
-    tx.create(userRef,{name,email:user.email.toLowerCase(),role:'admin',active:true,createdAt:FieldValue.serverTimestamp()});
+    const adminData={name,email:user.email.toLowerCase(),role:'admin',active:true,approvedAt:FieldValue.serverTimestamp()};
+    if(existing.exists)tx.update(userRef,adminData);
+    else tx.create(userRef,{...adminData,createdAt:FieldValue.serverTimestamp()});
   });
   try{await getAuth().updateUser(user.uid,{displayName:name});}catch(err){console.warn('Não foi possível atualizar o nome do Authentication:',err.message);}
   return {ok:true};
@@ -49,7 +51,7 @@ exports.createDriver = onCall({region:REGION},async request=>{
   const name=String(request.data?.name||'').trim(),email=String(request.data?.email||'').trim().toLowerCase(),password=String(request.data?.password||'');
   if(name.length<3||name.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<12)throw new HttpsError('invalid-argument','Nome, e-mail e senha com pelo menos 12 caracteres são obrigatórios.');
   const user=await getAuth().createUser({email,password,displayName:name});
-  try{await db.collection('users').doc(user.uid).set({name,email,role:'driver',active:true,createdAt:FieldValue.serverTimestamp()});}
+  try{await db.collection('users').doc(user.uid).set({name,email,role:'driver',active:false,createdAt:FieldValue.serverTimestamp()});}
   catch(err){await getAuth().deleteUser(user.uid);throw err;}
   return {uid:user.uid,name};
 });
