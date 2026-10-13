@@ -52,51 +52,171 @@ function setDataUnsub(fn){if(fn)S.dataUnsub.push(fn);}
 function clearUnsubs(){clearDataUnsubs();for(const fn of S.unsub){try{fn();}catch{}}S.unsub=[];clearMap('public-map');}
 // Mapa Leaflet persistente: não recria marcadores, tiles e zoom a cada snapshot.
 function validPosition(p){const lat=Number(p?.lat),lng=Number(p?.lng);return Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180;}
-function clearMap(key){const old=S.maps[key];if(old){try{old.map.remove();}catch(err){console.warn('Mapa anterior:',err);}delete S.maps[key];}}
-function timeAgo(ts){const t=typeof ts==='number'?ts:ts?.toMillis?.()||Date.parse(ts||'');if(!Number.isFinite(t))return null;const age=Math.max(0,Date.now()-t);return age<15000?'agora':age<60000?`há ${Math.floor(age/1000)} s`:`há ${Math.floor(age/60000)} min`;}
+// Mapa ao vivo: não recria a instância a cada snapshot do Firestore.
+// Corrige tamanho em modais, abas, mudanças de orientação e retorno ao aplicativo.
+function clearMap(key){
+ const old=S.maps[key]; if(!old)return;
+ try{
+   old.resizeObserver?.disconnect();
+   old.intersectionObserver?.disconnect();
+   if(old.timers) old.timers.forEach(clearTimeout);
+   old.notice?.remove();
+   old.map.remove();
+ }catch(err){console.warn('Encerramento do mapa:',err);}
+ delete S.maps[key];
+}
+function timeAgo(ts){
+ const t=typeof ts==='number'?ts:ts?.toMillis?.()||Date.parse(ts||'');
+ if(!Number.isFinite(t))return null;
+ const age=Math.max(0,Date.now()-t);
+ return age<15000?'agora':age<60000?`há ${Math.floor(age/1000)} s`:`há ${Math.floor(age/60000)} min`;
+}
 function updateGpsMeta(key,doc){
  const el=document.getElementById(key+'-info');if(!el)return;
  const loc=doc?.lastLocation;
- if(!validPosition(loc)){el.textContent='Aguardando a primeira posição GPS do motorista. Confira se ele tocou em Ativar GPS e permitiu a localização.';el.className='gps-meta gps-wait';return;}
+ if(!validPosition(loc)){
+   el.textContent='Aguardando a primeira posição GPS do motorista. Confira se ele tocou em Ativar GPS e permitiu a localização.';
+   el.className='gps-meta gps-wait';return;
+ }
  const t=typeof loc.ts==='number'?loc.ts:loc.ts?.toMillis?.()||Date.parse(loc.ts||'');
  const stale=!Number.isFinite(t)||Date.now()-t>90000;
  const accuracy=Number.isFinite(Number(loc.accuracy))?` · precisão aproximada de ${Math.round(Number(loc.accuracy))} m`:'';
  el.className='gps-meta '+(stale?'gps-stale':'gps-online');
- el.textContent=`${stale?'⚠ Última posição conhecida':'● GPS atualizado'} ${timeAgo(loc.ts)||'sem horário'}${accuracy}${stale?' · sinal interrompido ou aplicativo em segundo plano':''}`;
+ el.textContent=`${stale?'⚠ Última posição conhecida':'● GPS atualizado'} ${timeAgo(loc.ts)||'sem horário'}${accuracy}${stale?' · motorista precisa reabrir o aplicativo e reativar o GPS se ele foi suspenso':''}`;
+}
+function mapNotice(key,text){
+ const entry=S.maps[key];if(!entry)return;
+ if(!entry.notice){
+   const n=document.createElement('div');
+   n.className='gps-map-alert';
+   n.id=key+'-tile-alert';
+   n.setAttribute('role','status');
+   entry.node.insertAdjacentElement('afterend',n);
+   entry.notice=n;
+ }
+ if(!text){entry.notice.hidden=true;entry.notice.replaceChildren();return;}
+ entry.notice.hidden=false;
+ const description=document.createElement('span');
+ description.textContent=text;
+ const retry=document.createElement('button');
+ retry.type='button';retry.className='btn btn-outline btn-sm';
+ retry.dataset.action='retry-map';retry.dataset.map=key;
+ retry.textContent='↻ Recarregar mapa';
+ entry.notice.replaceChildren(description,retry);
+}
+function refreshMapSize(key){
+ const entry=S.maps[key];if(!entry||!entry.node.isConnected)return;
+ const r=entry.node.getBoundingClientRect();
+ if(r.width<80||r.height<80)return;
+ try{entry.map.invalidateSize({animate:false,pan:false});}
+ catch(err){console.warn('Redimensionamento do mapa:',err);}
 }
 function showMap(key,doc){
  const node=document.getElementById(key);if(!node)return;
  updateGpsMeta(key,doc);
  const pos=doc?.lastLocation;
- if(!window.L){node.innerHTML='<div class="map-missing">O mapa não carregou. Verifique a internet e recarregue a página.</div>';return;}
+ if(!window.L){node.innerHTML='<div class="map-missing">O mapa não carregou. Confira a internet e recarregue a página.</div>';return;}
  if(!validPosition(pos)){
-   clearMap(key);node.innerHTML='<div class="map-missing">📍 Aguardando o primeiro sinal de GPS do motorista.</div>';return;
+   clearMap(key);
+   node.innerHTML='<div class="map-missing">📍 Aguardando o primeiro sinal de GPS do motorista.</div>';
+   return;
  }
  const center=[Number(pos.lat),Number(pos.lng)];
  let entry=S.maps[key];
- if(entry && entry.node!==node){clearMap(key);entry=null;}
+ if(entry&&entry.node!==node){clearMap(key);entry=null;}
  if(!entry){
    node.replaceChildren();
-   const map=L.map(node,{zoomControl:true,preferCanvas:true}).setView(center,15);
-   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+   // Use somente o servidor oficial do OpenStreetMap. Não recarregue tiles
+   // em loop; erros são informados com opção de nova tentativa manual.
+   const map=L.map(node,{zoomControl:true,preferCanvas:true,zoomSnap:1}).setView(center,15);
+   const tileLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+     maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
+     keepBuffer:3,updateWhenIdle:true
+   }).addTo(map);
    const dot=L.divIcon({html:'<div class="driver-gps-dot"></div>',iconSize:[24,24],iconAnchor:[12,12],className:'driver-gps-icon'});
-   const marker=L.marker(center,{icon:dot}).addTo(map).bindPopup('Posição mais recente do motorista');
+   const marker=L.marker(center,{icon:dot}).addTo(map).bindPopup('Última posição recebida do motorista');
    const line=L.polyline([],{color:'#347dd8',weight:5,opacity:.86}).addTo(map);
-   entry={map,node,marker,line,follow:true};S.maps[key]=entry;
-   map.on('dragstart',()=>{entry.follow=false;});
-   setTimeout(()=>{if(node.isConnected&&S.maps[key]===entry)map.invalidateSize();},150);
+   entry={map,node,tileLayer,marker,line,follow:true,loaded:0,errors:0,
+     lastCenter:center,timers:[],notice:null,resizeObserver:null,intersectionObserver:null};
+   S.maps[key]=entry;
+   map.on('dragstart zoomstart',()=>{entry.follow=false;});
+   tileLayer.on('tileload',()=>{
+     entry.loaded++;
+     if(entry.errors===0 || entry.loaded>=3 && entry.errors<=1)mapNotice(key,'');
+   });
+   tileLayer.on('tileerror',()=>{
+     entry.errors++;
+     if(entry.errors>=2)mapNotice(key,'Alguns blocos do mapa não carregaram. Confira sua conexão e tente novamente.');
+   });
+   tileLayer.on('load',()=>{
+     if(entry.loaded>0 && entry.errors===0)mapNotice(key,'');
+   });
+   const defer=(ms)=>{
+     const timer=setTimeout(()=>{if(S.maps[key]===entry)refreshMapSize(key);},ms);
+     entry.timers.push(timer);
+   };
+   requestAnimationFrame(()=>{if(S.maps[key]===entry)refreshMapSize(key);});
+   [120,450,1100].forEach(defer);
+   entry.timers.push(setTimeout(()=>{
+     if(S.maps[key]===entry && entry.loaded===0)
+       mapNotice(key,'O servidor de mapas não respondeu. Confira sua conexão e tente recarregar.');
+   },11000));
+   if(typeof ResizeObserver!=='undefined'){
+     entry.resizeObserver=new ResizeObserver(()=>refreshMapSize(key));
+     entry.resizeObserver.observe(node);
+   }
+   if(typeof IntersectionObserver!=='undefined'){
+     entry.intersectionObserver=new IntersectionObserver(entries=>{
+       if(entries.some(item=>item.isIntersecting))refreshMapSize(key);
+     },{threshold:0});
+     entry.intersectionObserver.observe(node);
+   }
  }else{
    entry.marker.setLatLng(center);
-   if(entry.follow)entry.map.panTo(center,{animate:true,duration:.65});
+   const distance=entry.map.distance(entry.lastCenter,center);
+   if(entry.follow && distance>12){
+     entry.map.panTo(center,{animate:!document.hidden,duration:.35});
+     entry.lastCenter=center;
+   }
  }
  const points=(Array.isArray(doc.routePoints)?doc.routePoints:[])
    .filter(validPosition).map(p=>[Number(p.lat),Number(p.lng)]);
  entry.line.setLatLngs(points);
 }
-function centerMap(key){const entry=S.maps[key],d=key==='public-map'?S.currentTracking:findDelivery(S.modal?.dataset.deliveryId);if(!entry||!validPosition(d?.lastLocation))return;entry.follow=true;entry.map.invalidateSize();entry.map.setView([Number(d.lastLocation.lat),Number(d.lastLocation.lng)],15,{animate:true});}
-function refreshTrackingInfo(){if(S.currentTracking)updateGpsMeta('public-map',S.currentTracking);const d=findDelivery(S.modal?.dataset.deliveryId);if(d)updateGpsMeta('detail-map',d);}
+function retryMap(key){
+ const entry=S.maps[key];if(!entry)return;
+ entry.errors=0;entry.loaded=0;
+ mapNotice(key,'');
+ refreshMapSize(key);
+ entry.tileLayer.redraw();
+ entry.timers.push(setTimeout(()=>{
+   if(S.maps[key]===entry&&entry.loaded===0)
+     mapNotice(key,'O mapa continua indisponível. Você pode tentar novamente quando a conexão melhorar.');
+ },11000));
+}
+function centerMap(key){
+ const entry=S.maps[key],d=key==='public-map'?S.currentTracking:findDelivery(S.modal?.dataset.deliveryId);
+ if(!entry||!validPosition(d?.lastLocation))return;
+ entry.follow=true;entry.lastCenter=[Number(d.lastLocation.lat),Number(d.lastLocation.lng)];
+ refreshMapSize(key);
+ entry.map.setView(entry.lastCenter,15,{animate:true});
+}
+function refreshTrackingInfo(){
+ if(S.currentTracking)updateGpsMeta('public-map',S.currentTracking);
+ const d=findDelivery(S.modal?.dataset.deliveryId);
+ if(d)updateGpsMeta('detail-map',d);
+}
 setInterval(refreshTrackingInfo,15000);
-window.addEventListener('load',()=>{if(S.currentTracking?.status==='em_rota')showMap('public-map',S.currentTracking);const d=findDelivery(S.modal?.dataset.deliveryId);if(d?.status==='em_rota')showMap('detail-map',d);});
+window.addEventListener('resize',()=>{refreshMapSize('public-map');refreshMapSize('detail-map');});
+window.addEventListener('pageshow',()=>{refreshMapSize('public-map');refreshMapSize('detail-map');});
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden){refreshMapSize('public-map');refreshMapSize('detail-map');}
+});
+window.addEventListener('load',()=>{
+ if(S.currentTracking?.status==='em_rota')showMap('public-map',S.currentTracking);
+ const d=findDelivery(S.modal?.dataset.deliveryId);
+ if(d?.status==='em_rota')showMap('detail-map',d);
+});
 
 async function initCloud(){
   if(!configured)return;
@@ -599,6 +719,7 @@ document.addEventListener('click',async ev=>{
  case 'score':S.rating=Number(el.dataset.score);document.querySelectorAll('.score-btn').forEach(b=>b.classList.toggle('selected',Number(b.dataset.score)===S.rating));break;
  case 'simulate':await simulateStep(d);break;
  case 'activate-gps':startGps(d.id);break;
+ case 'retry-map':retryMap(el.dataset.map);break;
  case 'center-map':centerMap(el.dataset.map);break;
  }
  }catch(err){problem(err);}

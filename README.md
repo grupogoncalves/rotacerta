@@ -9,6 +9,20 @@ Versão adaptada ao Firebase **rotacerta-ee675**, com **cadastro e gestão de mo
 - Publique `firestore.rules` antes do aplicativo.
 - Abra `index.html` em seu Hosting para entrar; `VERSAO_UNICA_FIREBASE.html` é uma alternativa em arquivo único para hospedagem HTTPS; `DEMO.html` testa o visual offline.
 
+## Correção do mapa ao vivo (13/10/2026)
+
+- O Leaflet mantém a mesma instância e não recarrega o mapa a cada snapshot de localização.
+- Redimensiona quando o card/modal é aberto, quando o usuário rola até o mapa,
+  quando a tela gira ou ao retornar ao aplicativo.
+- Evita CSS que distorça as imagens dos blocos do mapa.
+- Detecta falhas no download de blocos do OpenStreetMap e permite recarga manual.
+- O GPS antigo continua marcado como **posição desatualizada**: o motorista precisa
+  manter o aplicativo aberto ou reativar o GPS quando seu sistema suspender a geolocalização.
+- O PWA não pode garantir localização contínua em segundo plano ou com tela bloqueada.
+- Nenhuma configuração adicional de Firebase/Cloud Functions/Storage é necessária para esta correção.
+- Atualize o `index.html`, `app.js`, `styles.css` e `sw.js` juntos se utilizar o PWA modular.
+  Se preferir arquivo único, publique `VERSAO_UNICA_FIREBASE.html`.
+
 ## Funcionalidades
 
 - Administrador cria e atribui entregas, acompanha o status e os motoristas.
