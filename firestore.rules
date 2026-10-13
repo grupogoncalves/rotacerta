@@ -9,10 +9,21 @@ service cloud.firestore {
     function assigned(d){ return driver() && d.driverId == request.auth.uid; }
     function deliveryPath(id){ return /databases/$(database)/documents/deliveries/$(id); }
     match /users/{uid} {
-      allow get: if signedIn() && request.auth.uid == uid || admin();
+      allow get: if (signedIn() && request.auth.uid == uid) || admin();
       allow list: if admin();
-      // Contas e perfis são criados pela Cloud Function (Admin SDK), não pelo navegador.
-      allow write: if false;
+      // Cadastro feito no aplicativo: SOMENTE o próprio usuário pode criar
+      // perfil de motorista INATIVO. O navegador nunca pode aprovar ou se promover.
+      allow create: if signedIn() && request.auth.uid == uid &&
+        request.auth.token.email is string &&
+        request.resource.data.keys().hasOnly(['name','email','role','active','createdAt']) &&
+        request.resource.data.keys().hasAll(['name','email','role','active','createdAt']) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 3 && request.resource.data.name.size() <= 100 &&
+        request.resource.data.email == request.auth.token.email.lower() &&
+        request.resource.data.role == 'driver' &&
+        request.resource.data.active == false &&
+        request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
     }
     match /deliveries/{deliveryId} {
       allow get, list: if admin() || assigned(resource.data);

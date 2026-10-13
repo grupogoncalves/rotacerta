@@ -36,7 +36,7 @@ const app = $('#app');
 const configured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
 const DEMO_KEY = 'rotacerta_demo_v1';
 const BASE = location.protocol==='file:'?'https://seu-dominio.example/index.html':`${location.origin}${location.pathname}`;
-const S = { cloud:configured, role:null, user:null, view:'overview', deliveries:[], drivers:[], unsub:[], modal:null, maps:{}, watch:null, gpsBusy:false, gpsLast:0, gpsPoint:null, photos:[], signed:false, rating:null, filter:'todos', term:'', currentTracking:null, trackStop:null, setupView:false, bootstrapInProgress:false };
+const S = { cloud:configured, role:null, user:null, view:'overview', deliveries:[], drivers:[], unsub:[], modal:null, maps:{}, watch:null, gpsBusy:false, gpsLast:0, gpsPoint:null, photos:[], signed:false, rating:null, filter:'todos', term:'', currentTracking:null, trackStop:null, setupView:false, bootstrapInProgress:false, registering:false, pendingUsers:[], dataUnsub:[] };
 let F = null, auth = null, db = null, functions = null;
 let localChannel = null, timerToast = null, memoryDemo = null;
 
@@ -78,7 +78,9 @@ function reloadDemo(){const x=readDemo();S.deliveries=x.deliveries;S.drivers=x.d
 function findDelivery(key){return S.deliveries.find(d=>d.id===key);}
 function own(d){return S.role==='admin'||d.driverId===S.user?.uid;}
 function setUnsub(fn){if(fn)S.unsub.push(fn);}
-function clearUnsubs(){for(const fn of S.unsub){try{fn();}catch{}}S.unsub=[];}
+function clearDataUnsubs(){for(const fn of S.dataUnsub){try{fn();}catch{}}S.dataUnsub=[];}
+function setDataUnsub(fn){if(fn)S.dataUnsub.push(fn);}
+function clearUnsubs(){clearDataUnsubs();for(const fn of S.unsub){try{fn();}catch{}}S.unsub=[];}
 function clearMap(key){if(S.maps[key]){S.maps[key].remove();delete S.maps[key];}}
 function showMap(key,locationData){const node=document.getElementById(key);if(!node)return;clearMap(key);const coords=locationData?.lastLocation;const points=locationData?.routePoints||[];if(!window.L){node.innerHTML='<div class="map-missing">Mapa indisponível sem acesso à internet.</div>';return;}if(!coords?.lat){node.innerHTML='<div class="map-missing">📍 A localização aparecerá assim que o motorista iniciar o GPS.</div>';return;}const map=L.map(node,{zoomControl:true}).setView([coords.lat,coords.lng],14);S.maps[key]=map;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);const marker=L.divIcon({html:'<div style="width:19px;height:19px;border:4px solid white;border-radius:50%;background:#27d6a3;box-shadow:0 0 0 5px #27d6a344"></div>',iconSize:[27,27],className:''});L.marker([coords.lat,coords.lng],{icon:marker}).addTo(map).bindPopup('Última posição do motorista');const valid=points.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lng)).map(p=>[p.lat,p.lng]);if(valid.length>1){const line=L.polyline(valid,{color:'#3977de',weight:5,opacity:.85}).addTo(map);map.fitBounds(line.getBounds(),{padding:[28,28],maxZoom:15});}setTimeout(()=>map.invalidateSize(),90);}
 
@@ -89,15 +91,84 @@ async function initCloud(){
   F={...appMod,...a,...f,...fun};const instance=F.initializeApp(firebaseConfig);
   auth=F.getAuth(instance);db=F.getFirestore(instance);functions=F.getFunctions(instance,'southamerica-east1');
 }
+// Inscrição pessoal: Authentication cria a conta; Firestore registra SOMENTE perfil pendente.
+// Apenas alguém com acesso administrativo ao Console Firebase pode alterar active para true.
+async function savePendingProfile(name){
+ const u=auth?.currentUser;if(!u?.email)throw Error('É preciso estar autenticado para solicitar acesso.');
+ name=String(name||'').trim();if(name.length<3||name.length>100)throw Error('Informe seu nome completo.');
+ const ref=F.doc(db,'users',u.uid),snap=await F.getDoc(ref);
+ if(snap.exists())throw Error('Sua solicitação já está registrada. Aguarde a aprovação.');
+ await F.setDoc(ref,{name,email:u.email.toLowerCase(),role:'driver',active:false,createdAt:F.serverTimestamp()});
+}
+function watchUserProfile(u){
+ clearUnsubs();stopGps();S.role=null;S.setupView=false;
+ S.user={uid:u.uid,email:u.email,name:u.displayName||u.email};
+ const uid=u.uid;
+ setUnsub(F.onSnapshot(F.doc(db,'users',uid),snap=>{
+   if(auth?.currentUser?.uid!==uid)return;
+   if(!snap.exists()){
+     clearDataUnsubs();S.role=null;
+     if(S.registering)renderWaitForRegistration();else renderMissingProfile();
+     return;
+   }
+   const profile=snap.data();
+   if(profile.active!==true || !['admin','driver'].includes(profile.role)){
+     if(S.role){clearDataUnsubs();stopGps();}
+     S.role=null;S.user={uid,email:u.email,name:profile.name||u.email};
+     renderAwaitingApproval(profile);return;
+   }
+   const changed=S.role!==profile.role;
+   S.user={uid,email:u.email,name:profile.name||u.email};
+   S.setupView=false;
+   if(changed){clearDataUnsubs();S.role=profile.role;S.view=profile.role==='admin'?'overview':'driver';attachData();}
+   else render();
+ },err=>{problem(err);app.innerHTML='<div class="error-page"><h2>Não foi possível consultar seu perfil</h2><p>Confira as regras do Firestore e tente novamente.</p><button class="btn btn-outline" data-action="logout">Sair</button></div>';}));
+}
+function authFrame(title,subtitle,fields,actionText,formId){
+ app.innerHTML=`<div class="auth-page"><section class="auth-art"><div class="logo"><span class="brand-mark">↗</span><span>RotaCerta<small>CONTROLE DE ACESSO</small></span></div><div><span class="eyebrow">EQUIPE DE ENTREGAS</span><h1>${title}</h1><p>Cadastre-se para solicitar acesso. O sistema só será liberado após aprovação no Firebase.</p></div><div class="auth-illustration">🔐</div></section><section class="auth-side"><div class="auth-form"><div class="brand-mark" style="margin-bottom:20px">↗</div><h2>${subtitle}</h2>${fields?`<form id="${formId}">${fields}<button type="submit" class="btn btn-primary btn-block">${actionText}</button></form>`:''}<div style="margin-top:16px">${btn('signup-back','← Voltar para login','btn-outline btn-block')}</div></div></section></div>`;
+}
+function renderSignup(){
+ const fields=`<p class="sub" style="margin-bottom:18px">Sua conta será criada como <b>Motorista · aguardando aprovação</b>. O administrador poderá mudar seu perfil diretamente no Firebase.</p><div class="field"><label>Nome completo</label><input class="auth-input" name="name" type="text" required minlength="3" maxlength="100" autocomplete="name" placeholder="Seu nome"></div><div class="field"><label>E-mail</label><input class="auth-input" type="email" name="email" required autocomplete="email" placeholder="voce@empresa.com"></div><div class="field"><label>Senha</label><input class="auth-input" type="password" name="password" required minlength="12" autocomplete="new-password" placeholder="Mínimo de 12 caracteres"></div><div class="field"><label>Confirmar senha</label><input class="auth-input" type="password" name="confirmPassword" required minlength="12" autocomplete="new-password" placeholder="Digite novamente a senha"></div>`;
+ authFrame('Seu acesso começa <em>aqui.</em>','Solicitar cadastro',fields,'Criar conta e solicitar aprovação →','signupForm');
+}
+function renderWaitForRegistration(){
+ app.innerHTML=`<div class="auth-page"><section class="auth-side" style="flex:1"><div class="auth-form"><h2>Registrando sua solicitação...</h2><p>Aguarde a confirmação do cadastro.</p></div></section></div>`;
+}
+function renderMissingProfile(){
+ if(S.setupView)return renderAdminSetup();
+ app.innerHTML=`<div class="auth-page"><section class="auth-art"><div class="logo"><span class="brand-mark">↗</span><span>RotaCerta<small>CADASTRO</small></span></div><div><h1>Complete sua <em>solicitação.</em></h1><p>Encontramos seu login, mas ainda falta o registro de autorização no Firestore.</p></div><div class="auth-illustration">👤</div></section><section class="auth-side"><div class="auth-form"><h2>Solicitar aprovação</h2><p>Conta: <b>${e(auth?.currentUser?.email||'')}</b></p><form id="requestAccessForm"><div class="field"><label>Nome completo</label><input class="auth-input" name="name" value="${e(auth?.currentUser?.displayName||'')}" required minlength="3" maxlength="100" placeholder="Seu nome completo"></div><button type="submit" class="btn btn-primary btn-block">Solicitar aprovação</button></form><div class="callout" style="margin-top:16px">Você receberá acesso somente depois que o responsável alterar <b>active = true</b> no Firestore.</div>${btn('setup-admin','🔐 Ativar primeiro administrador','btn-outline btn-block')}${btn('logout','Sair da conta','btn-outline btn-block')}</div></section></div>`;
+}
+function renderAwaitingApproval(profile){
+ if(S.setupView)return renderAdminSetup();
+ app.innerHTML=`<div class="auth-page"><section class="auth-art"><div class="logo"><span class="brand-mark">↗</span><span>RotaCerta<small>AGUARDANDO LIBERAÇÃO</small></span></div><div><span class="eyebrow">CADASTRO RECEBIDO</span><h1>Seu acesso está <em>pendente.</em></h1><p>O aplicativo liberará seu perfil automaticamente quando o administrador aprovar no Firebase.</p></div><div class="auth-illustration">⏳</div></section><section class="auth-side"><div class="auth-form"><div class="brand-mark" style="margin-bottom:20px">↗</div><h2>Solicitação registrada ✓</h2><p>Olá, <strong>${e(profile.name||S.user?.name||'')}</strong>. Seu usuário foi criado, mas ainda não está autorizado a entrar.</p><div class="callout warn" style="margin:18px 0"><b>Aguardando aprovação</b><p style="margin:7px 0 0">O responsável deverá abrir Firebase → Firestore → users → seu UID e alterar <code>active</code> para <code>true</code>.</p></div><div class="field"><label>UID da sua conta</label><div class="copy-input"><input readonly value="${e(S.user?.uid||'')}">${btn('copy-own-uid','Copiar UID','btn-outline btn-sm')}</div></div><p class="sub" style="font-size:12px;margin-top:12px">O status é acompanhado em tempo real. Não é necessário se cadastrar novamente.</p>${btn('setup-admin','🔐 Ativar primeiro administrador','btn-outline btn-block')}${btn('logout','Sair da conta','btn-outline btn-block')}</div></section></div>`;
+}
+async function registerAccount(form){
+ const data=new FormData(form),name=String(data.get('name')||'').trim(),email=String(data.get('email')||'').trim().toLowerCase(),password=String(data.get('password')||''),confirm=String(data.get('confirmPassword')||'');
+ if(name.length<3||name.length>100)throw Error('Informe seu nome completo.');
+ if(password.length<12)throw Error('A senha precisa de pelo menos 12 caracteres.');
+ if(password!==confirm)throw Error('As senhas não coincidem.');
+ S.registering=true;
+ try{
+   const result=await F.createUserWithEmailAndPassword(auth,email,password);
+   await F.updateProfile(result.user,{displayName:name});
+   await savePendingProfile(name);
+   toast('Cadastro enviado. Aguarde aprovação no Firebase.');
+ }finally{
+   S.registering=false;
+   if(auth?.currentUser)watchUserProfile(auth.currentUser);
+ }
+}
+async function requestAccess(form){await savePendingProfile(new FormData(form).get('name'));watchUserProfile(auth.currentUser);toast('Solicitação enviada. Aguarde aprovação.');}
+
 async function boot(){
   try{if('serviceWorker'in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
     if(!configured){const d=readDemo();S.deliveries=d.deliveries;S.drivers=d.drivers;localChannel='BroadcastChannel'in window?new BroadcastChannel('rotacerta-demo'):null;if(localChannel)localChannel.onmessage=reloadDemo;window.addEventListener('storage',ev=>{if(ev.key===DEMO_KEY)reloadDemo();});const publicRoute=new URLSearchParams(location.search);if(publicRoute.has('track'))return renderTrackingDemo();if(publicRoute.has('nps'))return renderNpsDemo();renderLogin();}
-    else{await initCloud();const p=new URLSearchParams(location.search);if(p.has('track'))return cloudTracking(p.get('track'));if(p.has('nps'))return cloudNps(p.get('nps'));F.onAuthStateChanged(auth,async u=>{clearUnsubs();stopGps();if(!u){S.role=null;S.user=null;S.setupView=false;renderLogin();return;}if(S.bootstrapInProgress)return;try{const snap=await F.getDoc(F.doc(db,'users',u.uid));const profile=snap.data();if(!snap.exists()){S.user={uid:u.uid,email:u.email,name:u.displayName||u.email};S.role=null;S.setupView=true;renderAdminSetup();return;}if(!profile?.active||!['admin','driver'].includes(profile.role))throw Error('Seu acesso não está ativo. Contate o administrador.');S.user={uid:u.uid,email:u.email,name:profile.name||u.email};S.role=profile.role;S.setupView=false;S.view=S.role==='admin'?'overview':'driver';attachData();}catch(err){problem(err);await F.signOut(auth);}});}
+    else{await initCloud();const p=new URLSearchParams(location.search);if(p.has('track'))return cloudTracking(p.get('track'));if(p.has('nps'))return cloudNps(p.get('nps'));F.onAuthStateChanged(auth,u=>{if(!u){clearUnsubs();stopGps();S.role=null;S.user=null;S.setupView=false;S.registering=false;renderLogin();return;}if(S.bootstrapInProgress||S.registering)return;watchUserProfile(u);});}
   }catch(err){console.error(err);app.innerHTML=`<div class="error-page"><h2>Falha ao iniciar o aplicativo</h2><p>${e(err.message)}</p><p>Confira sua conexão e o arquivo firebase-config.js.</p></div>`;}
 }
 function renderLogin(){
  if(configured && S.setupView){renderAdminSetup();return;}
- app.innerHTML=`<div class="auth-page"><section class="auth-art"><div class="logo" style="margin:0"><span class="brand-mark">↗</span><span>RotaCerta<small>LOGÍSTICA INTELIGENTE</small></span></div><div><span class="eyebrow">DO PEDIDO À ENTREGA</span><h1>Sua operação em <em>movimento.</em></h1><p>Controle cada entrega, acompanhe o motorista ao vivo e registre a satisfação de cada cliente.</p></div><div class="auth-illustration">🚚</div></section><section class="auth-side"><div class="auth-form"><div class="brand-mark" style="margin-bottom:23px">↗</div><h2>Bem-vindo de volta</h2><p>Entre para acessar suas entregas.</p>${configured?`<form id="loginForm"><div class="field"><label>E-mail</label><input name="email" class="auth-input" type="email" autocomplete="username" required placeholder="voce@empresa.com"></div><div class="field"><label>Senha</label><input name="password" class="auth-input" type="password" autocomplete="current-password" required placeholder="••••••••"></div><button class="btn btn-primary btn-block" type="submit">Entrar no sistema →</button></form><div class="callout" style="margin-top:20px">Ainda não tem administrador? Crie o primeiro acesso usando a chave de ativação configurada no servidor.</div><button type="button" data-action="setup-admin" class="btn btn-outline btn-block" style="margin-top:13px">＋ Criar primeiro administrador</button>`:`<div class="demo-box"><strong>✨ Demonstração interativa</strong><small>Teste todas as telas sem cadastrar uma conta. Dados ficam somente neste navegador.</small><div class="demo-buttons"><button data-action="login-admin" class="btn btn-primary btn-block">Entrar como administrador →</button><button data-action="login-driver" class="btn btn-outline btn-block">Entrar como motorista 🚚</button></div></div><div class="callout warn" style="margin-top:18px">Modo demonstração: o WhatsApp abre com uma mensagem pronta, sem envio automático. Para rastreamento entre celulares, configure o Firebase.</div>`}</div></section></div>`;
+ app.innerHTML=`<div class="auth-page"><section class="auth-art"><div class="logo" style="margin:0"><span class="brand-mark">↗</span><span>RotaCerta<small>LOGÍSTICA INTELIGENTE</small></span></div><div><span class="eyebrow">DO PEDIDO À ENTREGA</span><h1>Sua operação em <em>movimento.</em></h1><p>Controle cada entrega, acompanhe o motorista ao vivo e registre a satisfação de cada cliente.</p></div><div class="auth-illustration">🚚</div></section><section class="auth-side"><div class="auth-form"><div class="brand-mark" style="margin-bottom:23px">↗</div><h2>Bem-vindo de volta</h2><p>Entre para acessar suas entregas.</p>${configured?`<form id="loginForm"><div class="field"><label>E-mail</label><input name="email" class="auth-input" type="email" autocomplete="username" required placeholder="voce@empresa.com"></div><div class="field"><label>Senha</label><input name="password" class="auth-input" type="password" autocomplete="current-password" required placeholder="••••••••"></div><button class="btn btn-primary btn-block" type="submit">Entrar no sistema →</button></form><button type="button" data-action="signup" class="btn btn-outline btn-block" style="margin-top:13px">＋ Criar usuário / Solicitar cadastro</button><div class="callout" style="margin-top:16px">Após o cadastro, o responsável aprova o acesso pelo Firestore. Para a configuração inicial, use a chave privada de administrador.</div><button type="button" data-action="setup-admin" class="btn btn-outline btn-block" style="margin-top:13px">🔐 Criar primeiro administrador</button>`:`<div class="demo-box"><strong>✨ Demonstração interativa</strong><small>Teste todas as telas sem cadastrar uma conta. Dados ficam somente neste navegador.</small><div class="demo-buttons"><button data-action="login-admin" class="btn btn-primary btn-block">Entrar como administrador →</button><button data-action="login-driver" class="btn btn-outline btn-block">Entrar como motorista 🚚</button></div></div><div class="callout warn" style="margin-top:18px">Modo demonstração: o WhatsApp abre com uma mensagem pronta, sem envio automático. Para rastreamento entre celulares, configure o Firebase.</div>`}</div></section></div>`;
 }
 
 function renderAdminSetup(){
@@ -119,16 +190,15 @@ async function setupFirstAdmin(form){
   const fn=F.httpsCallable(functions,'setupFirstAdmin');await fn({name,setupKey});
   const u=auth.currentUser;
   if(!u)throw Error('Não foi possível validar sua sessão. Entre novamente.');
-  S.user={uid:u.uid,email:u.email,name};S.role='admin';S.setupView=false;S.view='overview';
-  attachData();toast('Administrador ativado! Bem-vindo ao RotaCerta.');
+  S.user={uid:u.uid,email:u.email,name};S.setupView=false;watchUserProfile(u);toast('Administrador ativado! Bem-vindo ao RotaCerta.');
  }catch(err){S.setupView=true;renderAdminSetup();throw err;}
  finally{S.bootstrapInProgress=false;}
 }
 
 function attachData(){
   if(!configured)return;
-  if(S.role==='admin'){setUnsub(F.onSnapshot(F.collection(db,'deliveries'),snap=>{S.deliveries=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));render();},problem));setUnsub(F.onSnapshot(F.collection(db,'users'),snap=>{S.drivers=snap.docs.map(x=>({uid:x.id,...x.data()})).filter(x=>x.role==='driver'&&x.active);render();},problem));}
-  else{setUnsub(F.onSnapshot(F.query(F.collection(db,'deliveries'),F.where('driverId','==',S.user.uid)),snap=>{S.deliveries=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));render();},problem));}
+  if(S.role==='admin'){setDataUnsub(F.onSnapshot(F.collection(db,'deliveries'),snap=>{S.deliveries=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));render();},problem));setDataUnsub(F.onSnapshot(F.collection(db,'users'),snap=>{const users=snap.docs.map(x=>({uid:x.id,...x.data()}));S.drivers=users.filter(x=>x.role==='driver'&&x.active===true);S.pendingUsers=users.filter(x=>x.active!==true);render();},problem));}
+  else{setDataUnsub(F.onSnapshot(F.query(F.collection(db,'deliveries'),F.where('driverId','==',S.user.uid)),snap=>{S.deliveries=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));render();},problem));}
   render();
 }
 function enterDemo(role){S.role=role;S.user=role==='admin'?{uid:'admin-demo',name:'Administrador',email:'admin@demo.test'}:{uid:'driver-demo',name:'Motorista demonstração',email:'motorista@demo.test'};S.view=role==='admin'?'overview':'driver';render();}
@@ -141,7 +211,7 @@ function rows(items){if(!items.length)return `<div class="empty"><div class="emp
 function filtersHTML(){return `<div class="filters"><div class="search"><input id="searchDeliveries" value="${e(S.term)}" type="search" placeholder="Buscar cliente, entrega ou OP..."></div><select id="filterStatus" class="filter-select"><option value="todos" ${S.filter==='todos'?'selected':''}>Todos os status</option><option value="pendente" ${S.filter==='pendente'?'selected':''}>Aguardando</option><option value="em_rota" ${S.filter==='em_rota'?'selected':''}>Em rota</option><option value="entregue" ${S.filter==='entregue'?'selected':''}>Entregue</option></select></div>`;}
 function overview(){const recent=S.deliveries.filter(d=>d.status==='entregue').slice(0,4);return `${stats()}<div class="split"><section class="panel"><div class="panel-head"><div><h2 class="panel-title">Entregas recentes</h2><p class="panel-sub">Visão rápida dos pedidos cadastrados</p></div>${btn('new-delivery','＋ Nova entrega','btn-primary')}</div><div class="delivery-list">${rows(S.deliveries.slice(0,7))}</div><div style="margin-top:17px;text-align:center">${btn('view','Ver todas as entregas →','btn-outline btn-sm','data-view="deliveries"')}</div></section><section class="panel"><div class="panel-head"><div><h2 class="panel-title">Atividade da operação</h2><p class="panel-sub">Últimos eventos</p></div></div>${recent.length?recent.map(d=>`<div class="activity-item"><strong>${e(d.customerName)}</strong><small>Entrega concluída · ${formatDate(d.deliveredAt)}</small></div>`).join(''):'<p class="sub" style="font-size:13px">As entregas finalizadas aparecerão aqui.</p>'}<div class="info-box" style="margin-top:26px"><div class="num">${S.deliveries.filter(d=>d.status==='entregue').length}</div><p>Entregas finalizadas no histórico</p></div></section></div>`;}
 function deliveryPanel(){return `<section class="panel"><div class="panel-head"><div><h2 class="panel-title">Todos os pedidos</h2><p class="panel-sub">${S.deliveries.length} entrega(s) cadastrada(s)</p></div>${btn('new-delivery','＋ Nova entrega','btn-primary')}</div>${filtersHTML()}<div id="deliveryResults" class="delivery-list">${rows(filtered())}</div></section>`;}
-function driversPanel(){return `<section class="panel"><div class="panel-head"><div><h2 class="panel-title">Motoristas cadastrados</h2><p class="panel-sub">Os motoristas recebem as entregas atribuídas</p></div>${btn('new-driver','＋ Adicionar motorista','btn-primary')}</div><div class="driver-cards">${S.drivers.map(d=>`<div class="driver-card"><div class="driver-icon">🚚</div><strong>${e(d.name)}</strong><p>${e(d.email||'Sem e-mail')}</p><p>${S.deliveries.filter(x=>x.driverId===d.uid&&x.status==='em_rota').length} em rota · ${S.deliveries.filter(x=>x.driverId===d.uid&&x.status==='pendente').length} pendentes</p><div style="margin-top:15px"><span class="small-tag">● Ativo</span></div></div>`).join('')||'<p class="sub">Cadastre o primeiro motorista para iniciar.</p>'}</div></section><div class="callout" style="margin-top:18px">${configured?'As contas são criadas pela função segura do servidor. O motorista usa e-mail e senha, sem acesso ao painel administrativo.':'No modo demo, você pode adicionar nomes e simular a distribuição de entregas.'}</div>`;}
+function driversPanel(){const consoleLink='https://console.firebase.google.com/project/rotacerta-ee675/firestore';return `<section class="panel"><div class="panel-head"><div><h2 class="panel-title">Motoristas aprovados</h2><p class="panel-sub">Os motoristas são cadastrados pelo próprio aplicativo e liberados no Firebase.</p></div>${btn('new-driver','＋ Como cadastrar','btn-primary')}</div><div class="driver-cards">${S.drivers.map(d=>`<div class="driver-card"><div class="driver-icon">🚚</div><strong>${e(d.name)}</strong><p>${e(d.email||'Sem e-mail')}</p><p>${S.deliveries.filter(x=>x.driverId===d.uid&&x.status==='em_rota').length} em rota · ${S.deliveries.filter(x=>x.driverId===d.uid&&x.status==='pendente').length} pendentes</p><div style="margin-top:15px"><span class="small-tag">● Ativo</span></div></div>`).join('')||'<p class="sub">Ainda não há motoristas aprovados. Compartilhe o link do aplicativo para que se cadastrem.</p>'}</div></section><section class="panel" style="margin-top:18px"><div class="panel-head"><div><h2 class="panel-title">Aguardando aprovação</h2><p class="panel-sub">${S.pendingUsers.length} cadastro(s) pendente(s). Aprove diretamente no Firestore.</p></div></div>${S.pendingUsers.map(x=>`<div class="delivery-row" style="align-items:center"><div><strong>${e(x.name||'Usuário')}</strong><p class="row-muted">${e(x.email||'')} · Solicitação pendente</p><small class="row-code" style="overflow-wrap:anywhere">${e(x.uid)}</small></div><div class="row-last"><span class="status status-pendente">Pendente</span>${btn('copy-pending-uid','Copiar UID','btn-outline btn-sm',`data-uid="${e(x.uid)}"`)}</div></div>`).join('')||'<p class="sub">Nenhuma solicitação pendente.</p>'}<div class="callout" style="margin-top:16px">Para liberar um motorista: <b>Console Firebase → Firestore → users → documento com o UID → active = true</b> (booleano). Mantenha <code>role = driver</code>. <a href="${consoleLink}" target="_blank" rel="noopener noreferrer">Abrir Firestore ↗</a></div></section>`;}
 function driverPanel(){const tasks=S.deliveries.filter(d=>own(d));return `<div class="driver-hero"><div><span style="font-weight:800;color:#54e1b6;font-size:12px">🚚 ÁREA DO MOTORISTA</span><h2>Boas entregas,<br>${e(S.user.name.split(' ')[0])}!</h2><p>Você tem ${tasks.filter(d=>d.status!=='entregue').length} entrega(s) em aberto.</p></div><div class="hero-art">📦</div></div>${tasks.filter(d=>d.status==='em_rota').length?`<div class="callout" style="margin-bottom:16px"><span class="onroute-indicator"></span> Entrega em andamento. Deixe o aplicativo aberto e permita acesso à localização.</div>`:''}<div class="panel-head"><div><h2 class="panel-title">Minha lista de entregas</h2><p class="panel-sub">Confira o pedido antes de iniciar a viagem</p></div></div>${tasks.length?tasks.map(d=>`<div class="delivery-mobile"><div class="dm-head"><div><div class="row-code">${e(d.code)} · ${e(d.orderNumber||'Sem OP')}</div><h3 style="font-size:21px;margin:6px 0">${e(d.customerName)}</h3></div>${badge(d.status)}</div><div class="dm-body"><div style="font-size:13px;color:#5d6f86;margin:5px 0 12px">📍 ${e(d.address)}, ${e(d.city)}</div><div style="font-size:12px;color:#8594a9">${d.notes?e(d.notes):'Sem observações adicionais.'}</div>${d.status==='em_rota'?'<div class="timeline"><div class="complete"></div><div class="complete"></div><div></div></div>':''}</div><div class="dm-foot">${btn('detail','Detalhes','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${d.status==='pendente'?btn('start','▶ Iniciar entrega','btn-green',`data-id="${e(d.id)}"`):''}${d.status==='em_rota'?`${btn('finish-open','✓ Concluir entrega','btn-green',`data-id="${e(d.id)}"`)}${btn('activate-gps','📍 Ativar GPS','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${btn('wa-start','✉ Mensagem pronta','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${!configured?btn('simulate','Simular rota','btn-soft btn-sm',`data-id="${e(d.id)}"`):''}`:''}${d.status==='entregue'?'<span class="sub" style="font-size:12px;align-self:center">✓ Comprovante registrado</span>':''}</div></div>`).join(''):`<div class="empty"><div class="empty-big">🛣️</div><strong>Sem entregas atribuídas</strong><p>O administrativo deve selecionar você como motorista.</p></div>`}`;}
 function render(){if(!S.role)return renderLogin();const active=document.activeElement;const focusingSearch=active?.id==='searchDeliveries';const pos=focusingSearch?active.selectionStart:null;app.innerHTML=shellMain();const detailMap=document.getElementById('detail-map');if(detailMap && S.modal?.dataset.deliveryId){const fresh=findDelivery(S.modal.dataset.deliveryId);if(fresh?.status==='em_rota')showMap('detail-map',fresh);}if(focusingSearch){const n=$('#searchDeliveries');n.focus();n.setSelectionRange(pos,pos);}const activeD=S.deliveries.find(d=>d.status==='em_rota'&&d.driverId===S.user?.uid);if(S.role==='driver' && activeD && S.watch===null && !S.gpsPaused){/* GPS starts only after explicit user click/permission, not on page render */}}
 
@@ -219,13 +289,17 @@ document.addEventListener('click',async ev=>{
  const el=ev.target.closest('[data-action]');if(!el)return;const action=el.dataset.action,d=findDelivery(el.dataset.id);try{
  switch(action){
  case 'login-admin':enterDemo('admin');break;
+  case 'signup':if(configured)renderSignup();break;
+  case 'signup-back':if(auth?.currentUser&&!S.role)await F.signOut(auth);else{S.setupView=false;renderLogin();}break;
+  case 'copy-own-uid':await copy(S.user?.uid||'','UID copiado.');break;
+  case 'copy-pending-uid':await copy(el.dataset.uid||'','UID copiado.');break;
  case 'setup-admin':S.setupView=true;renderAdminSetup();break;
  case 'setup-back':S.setupView=false;if(auth?.currentUser && !S.role)await F.signOut(auth);else renderLogin();break;
  case 'login-driver':enterDemo('driver');break;
  case 'view':S.view=el.dataset.view;render();break;
  case 'logout':stopGps();clearUnsubs();closeModal();if(configured)await F.signOut(auth);else{S.user=null;S.role=null;renderLogin();}break;
  case 'new-delivery':deliveryForm();break;
- case 'new-driver':newDriverForm();break;
+ case 'new-driver':if(configured)modal('Como cadastrar um motorista','<div class="info-box"><strong>Cadastro pelo próprio aplicativo</strong><p>Peça ao motorista para abrir o endereço do RotaCerta, tocar em <b>Criar usuário / Solicitar cadastro</b> e cadastrar nome, e-mail e senha. A solicitação aparecerá nesta tela como <b>Pendente</b>. Para liberar, altere <code>active</code> de <code>false</code> para <code>true</code> no Firestore.</p><p>O motorista só acessará suas entregas após a aprovação.</p></div>',btn('close-modal','Entendi'));else newDriverForm();break;
  case 'close-modal':closeModal();break;
  case 'detail':detail(d);break;
  case 'finish-open':openFinish(d);break;
@@ -247,8 +321,10 @@ document.addEventListener('click',async ev=>{
  }catch(err){problem(err);}
 });
 document.addEventListener('submit',async ev=>{
- const form=ev.target;if(!['loginForm','setupAdminForm','newDeliveryForm','newDriverForm','finishForm','npsForm'].includes(form.id))return;ev.preventDefault();const submit=form.querySelector('[type="submit"]')||document.querySelector(`[form="${form.id}"][type="submit"]`);if(submit)submit.disabled=true;try{
+ const form=ev.target;if(!['loginForm','signupForm','requestAccessForm','setupAdminForm','newDeliveryForm','newDriverForm','finishForm','npsForm'].includes(form.id))return;ev.preventDefault();const submit=form.querySelector('[type="submit"]')||document.querySelector(`[form="${form.id}"][type="submit"]`);if(submit)submit.disabled=true;try{
  if(form.id==='loginForm'){const fd=new FormData(form);await F.signInWithEmailAndPassword(auth,fd.get('email'),fd.get('password'));}
+  if(form.id==='signupForm')await registerAccount(form);
+  if(form.id==='requestAccessForm')await requestAccess(form);
  if(form.id==='setupAdminForm')await setupFirstAdmin(form);
  if(form.id==='newDeliveryForm')await createDelivery(form);
  if(form.id==='newDriverForm')await createDriver(form);

@@ -59,7 +59,7 @@ firebase deploy --project rotacerta-ee675 --only firestore,functions,hosting
 
 Cloud Functions e Secret Manager podem exigir o **plano Blaze** e ter cobrança. Não precisamos habilitar o Firebase Storage.
 
-**No Console Firebase**, ative Authentication (e-mail/senha) e Firestore. Após publicar as Functions, abra o aplicativo e toque em **"Criar primeiro administrador"**. Informe nome, e-mail, senha (12+ caracteres) e a mesma chave privada que você definiu em `ADMIN_SETUP_KEY`. O sistema cria a conta no Authentication e, pela Function `setupFirstAdmin`, o perfil `users/<UID>` no Firestore. A ativação só funciona uma vez. Se a conta já tiver sido criada no Authentication, a tela tenta autenticar com o e-mail e senha informados e concluir a ativação. Depois o administrador cria motoristas no painel (a Function `createDriver` exige senha inicial de pelo menos 12 caracteres).
+**No Console Firebase**, ative Authentication (e-mail/senha) e Firestore. Após publicar as Functions, abra o aplicativo e toque em **"Criar primeiro administrador"**. Informe nome, e-mail, senha (12+ caracteres) e a mesma chave privada que você definiu em `ADMIN_SETUP_KEY`. O sistema cria a conta no Authentication e, pela Function `setupFirstAdmin`, o perfil `users/<UID>` no Firestore. A ativação só funciona uma vez. Se a conta já tiver sido criada no Authentication, a tela tenta autenticar com o e-mail e senha informados e concluir a ativação. Os novos motoristas se cadastram sozinhos na tela de login, sem depender de Cloud Functions para o cadastro. A conta fica pendente no Firestore até ser aprovada manualmente.
 
 **Alternativa manual, para resolver um login já cadastrado imediatamente:** no Firebase Console → Authentication → Usuários, localize o UID (ou crie o usuário com e-mail e senha). No Firestore → `users` → documento cujo ID seja exatamente o UID, adicione `name` (string), `email` (string), `role` (string com valor `admin`) e `active` (boolean `true`). Essa operação deve ser feita pelo proprietário do projeto no Console, nunca por regras de gravação abertas ao público.
 
@@ -68,6 +68,35 @@ Cloud Functions e Secret Manager podem exigir o **plano Blaze** e ter cobrança.
 Registre o domínio publicado em **Authentication → Settings → Authorized Domains**. Hospedagem HTTPS é necessária para GPS e links públicos.
 
 **Nenhum deploy nem configuração no Drive foi feito automaticamente.** Precisamos que você execute esses passos na sua conta, porque não recebemos autorização nem o ID da pasta Google Drive.
+
+## Cadastro de usuários pelo aplicativo e aprovação no Firebase
+
+1. Abra o aplicativo publicado e selecione **Criar usuário / Solicitar cadastro**.
+2. Informe **nome completo, e-mail e senha com no mínimo 12 caracteres**; confirme a senha.
+3. O Firebase Authentication cria o usuário e o aplicativo cria automaticamente o documento **`users/<UID>`** no Cloud Firestore com os campos:
+
+   ```json
+   {"name":"Nome do motorista","email":"email@empresa.com","role":"driver","active":false}
+   ```
+   (`createdAt` também é gravado como timestamp do servidor.)
+4. O usuário verá **Aguardando aprovação** e **não terá acesso** a entregas ou fotos.
+5. O responsável pelo projeto entra no [Console Firebase](https://console.firebase.google.com/project/rotacerta-ee675/firestore), navega até **Firestore Database → Dados → users → documento com o UID**, e altera **`active` para `true` (booleano)**. Não use a string `"true"`. Para motoristas mantenha `role` como `driver`; para administrador autorizado use `admin`.
+6. O app acompanha o documento em tempo real e, após a aprovação, abre o painel correspondente automaticamente, sem novo cadastro.
+
+**Atenção:** a regra de cadastro não permite que o usuário altere a própria função ou o próprio campo `active`. Somente o proprietário do Firebase, com as permissões adequadas no Console/Admin SDK, pode aprovar. Publique o `firestore.rules` atualizado **antes de testar o cadastro**, ou a operação será bloqueada com `Missing or insufficient permissions`.
+
+### Como criar o primeiro administrador
+
+**Opção rápida pelo Console:** crie uma conta pelo aplicativo, localize `users/<UID>` no Firestore e altere `role` para `admin` e `active` para `true` por meio de uma conta com permissão de edição do Firebase. Dessa forma, não é necessário configurar `ADMIN_SETUP_KEY` apenas para começar a usar o aplicativo (mas outras Functions continuam necessárias para usar o Drive).
+
+**Opção via aplicativo com chave:** configure e publique a Function `setupFirstAdmin` com `ADMIN_SETUP_KEY`. A função aceita uma conta com perfil pendente, validando a chave privada e a trava de criação única. **Nunca** exponha a chave em HTML ou links. O procedimento foi preservado no aplicativo.
+
+### Limites importantes
+
+- A inscrição requer Firebase Authentication com o provedor **E-mail/Senha** habilitado e as regras Firestore da versão atual publicadas.
+- O perfil pendente pode ser usado por pessoas de fora para solicitar acesso; ele não abre entregas. Para reduzir abuso em produção, ative proteção contra cadastros automatizados (App Check, quotas e políticas adequadas).
+- A aprovação pelo Console exige acesso de administrador ao **projeto Firebase**, e não é feita automaticamente pelo aplicativo.
+- O Google Drive recebe somente ordens de produção, fotos e assinaturas; Firebase Storage **não** é usado.
 
 ## 3 — Fluxos do aplicativo
 
@@ -95,7 +124,7 @@ index.html / styles.css / app.js            Aplicativo PWA conectado
 firebase-config.js                          Configuração web Firebase
 firestore.rules                              Banco e papéis de acesso
 firebase.json / .firebaserc                 Hosting e deploy (sem Storage)
-functions/index.js                           Ativação segura do primeiro administrador, motoristas, Drive, sincronização NPS
+functions/index.js                           Ativação segura do primeiro administrador, Drive, sincronização NPS
 setup/DriveBridge.gs                         Script da ponte segura para o Drive
 VERSAO_UNICA_FIREBASE.html                  HTML único conectado (sem PWA instalável)
 DEMO.html                                    Demonstração local sem Firebase/Drive
