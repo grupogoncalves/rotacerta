@@ -92,6 +92,21 @@ service cloud.firestore {
         )
       );
     }
+    // Todas as páginas extraídas da OP. Apenas admin ou motorista designado.
+    // Nunca são acessíveis pelos links públicos de rastreamento/NPS.
+    match /deliveries/{deliveryId}/orderPages/{pageId} {
+      allow get, list: if admin() || (
+        exists(deliveryPath(deliveryId)) &&
+        assigned(get(deliveryPath(deliveryId)).data)
+      );
+      allow create: if admin() &&
+        existsAfter(deliveryPath(deliveryId)) &&
+        request.resource.data.keys().hasOnly(['page','part','text','createdAt']) &&
+        request.resource.data.page is int && request.resource.data.page > 0 && request.resource.data.page <= 100 &&
+        request.resource.data.part is int && request.resource.data.part > 0 &&
+        request.resource.data.text is string && request.resource.data.text.size() <= 55000;
+      allow update, delete: if admin();
+    }
     match /tracking/{trackingToken} {
       // Token aleatório de 160 bits; não contém dados pessoais nem CPF.
       allow get: if true;

@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#111b33">
   <meta name="description" content="Gestão de entregas com rastreamento, comprovante digital e NPS.">
+
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzxZ9mZyozZ+Mhg9Z7K8mZ/3H0=" crossorigin="">
-<style>
+  <style>
 :root{--navy:#111b33;--navy2:#1e304e;--green:#30c995;--mint:#ddfaf0;--blue:#4d83f3;--bluebg:#edf3ff;--ink:#1c2841;--muted:#8190a8;--line:#e7edf4;--bg:#f5f7fb;--white:#fff;--orange:#f1a44e;--red:#ed6a6a;--shadow:0 14px 45px rgba(35,55,92,.065)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--bg)}button,input,textarea,select{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}p{line-height:1.6}h1,h2,h3,h4{font-family:'Outfit',sans-serif;letter-spacing:-.035em}h1,h2,h3,p{margin-top:0}.hidden{display:none!important}.sub{color:var(--muted)}.boot{height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center}.boot .brand-mark{width:70px;height:70px}.brand-mark{width:39px;height:39px;border-radius:13px;display:inline-grid;place-items:center;background:var(--green);color:var(--navy);font-weight:900;font-size:30px;line-height:1}
 .app-layout{display:grid;grid-template-columns:238px 1fr;min-height:100dvh}.side{background:var(--navy);color:white;min-height:100dvh;position:sticky;top:0;height:100dvh;display:flex;flex-direction:column;padding:27px 15px}.logo{display:flex;align-items:center;gap:11px;font-size:22px;font-weight:800;letter-spacing:-.8px;color:white;margin:0 10px 46px}.logo span small{font-size:9px;letter-spacing:1.9px;display:block;font-weight:700;opacity:.45;text-transform:uppercase;margin-top:1px}.nav-label{text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#8090ad;font-weight:800;margin:0 14px 15px}.nav-links{display:grid;gap:6px}.nav-link{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:13px;border:none;color:#a9b6ce;background:transparent;text-align:left;font-size:14px;font-weight:700;width:100%;transition:.2s}.nav-link:hover{background:#233651;color:white}.nav-link.active{background:var(--green);color:#102d2d}.nav-ico{font-size:18px;width:22px;text-align:center}.side-foot{margin-top:auto;padding:16px;border:1px solid #31405b;border-radius:16px;background:#1b2a45}.avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:12px;background:#314866;font-weight:800;color:white}.side-foot small{display:block;color:#91a0bb}.side-foot button{margin-top:15px;background:none;border:0;color:#b6c6de;text-align:left;padding:0;font-size:12px}.content{padding:30px clamp(20px,4vw,66px) 70px;min-width:0}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:33px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:2.4px;color:var(--green);text-transform:uppercase;margin-bottom:8px}.page-title{font-size:clamp(27px,3.2vw,37px);line-height:1.1;margin-bottom:7px}.top-actions{display:flex;align-items:center;gap:10px}.small-tag{font-size:11px;font-weight:800;padding:8px 10px;border-radius:8px;background:#e7f9f2;color:#278464}.demo-tag{color:#985911;background:#fff0d7}.userchip{border:1px solid var(--line);background:white;display:flex;align-items:center;gap:10px;border-radius:30px;padding:6px 12px 6px 6px;font-size:12px;font-weight:700}.userchip .avatar{width:29px;height:29px;border-radius:50%;background:var(--navy2);font-size:12px}.btn{border:0;border-radius:12px;padding:12px 17px;font-weight:800;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:43px;transition:transform .15s,box-shadow .15s;white-space:nowrap}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}.btn-primary{background:var(--navy);color:#fff;box-shadow:0 7px 18px rgba(19,35,61,.14)}.btn-green{background:var(--green);color:#073b31}.btn-outline{background:white;border:1px solid var(--line);color:#30435e}.btn-soft{color:#2366d1;background:var(--bluebg)}.btn-danger{background:#feeeee;color:#bc3e44}.btn-sm{padding:8px 11px;min-height:33px;font-size:12px;border-radius:9px}.btn-block{width:100%}.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:25px}.stat-card{border:1px solid var(--line);background:white;border-radius:19px;padding:20px 20px 17px;box-shadow:var(--shadow);overflow:hidden}.stat-top{display:flex;justify-content:space-between;gap:8px;color:#7a8aa1;font-size:12px;font-weight:700}.stat-icon{font-size:22px;background:#edf3fc;width:39px;height:39px;display:grid;place-items:center;border-radius:12px}.stat-number{font:800 32px 'Outfit',sans-serif;letter-spacing:-1px;margin:10px 0 5px}.stat-note{color:#9cabc0;font-size:11px}.panel{border:1px solid var(--line);background:white;border-radius:20px;box-shadow:var(--shadow);padding:22px;min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:21px}.panel-title{font-size:19px;font-weight:800;margin:0}.panel-sub{font-size:12px;color:var(--muted);margin:4px 0 0}.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}.search{position:relative;flex:1;min-width:180px}.search input,.field input,.field select,.field textarea,.auth-input{width:100%;min-width:0;padding:12px 13px;border-radius:10px;border:1px solid #dde5ef;background:#fff;outline:none;color:var(--ink);font-size:14px}.search input{padding-left:38px}.search::before{content:'⌕';position:absolute;left:14px;top:7px;font-size:23px;color:#9ca9b8}.search input:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:#83b9ed;box-shadow:0 0 0 3px #e7f2ff}.filter-select{border:1px solid var(--line);border-radius:10px;padding:0 11px;background:white;color:#61728b;max-width:165px}.delivery-list{display:grid;gap:12px}.delivery-row{border:1px solid #e8edf4;border-radius:14px;padding:15px 16px;display:grid;grid-template-columns:1.2fr 1fr auto;gap:12px;align-items:center;transition:.2s}.delivery-row:hover{border-color:#adc4dd;background:#fdfefe}.row-name{font-size:14px;font-weight:800;margin:2px 0}.row-muted{color:var(--muted);font-size:12px;margin-top:5px}.row-code{color:#97a5b8;font-size:11px;font-weight:800}.status{display:inline-block;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:800;letter-spacing:.2px;white-space:nowrap}.status-pendente{background:#fff4e7;color:#b87931}.status-em_rota{background:#eaf2ff;color:#4479cd}.status-entregue{background:#e0f8eb;color:#328b65}.row-last{display:flex;gap:10px;align-items:center;justify-content:flex-end}.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px}.empty-big{font-size:40px;margin-bottom:10px}.split{display:grid;grid-template-columns:1fr 330px;gap:20px}.info-box{background:#f6f9fd;border-radius:13px;padding:16px}.info-box .num{font:800 28px 'Outfit',sans-serif}.info-box p{font-size:12px;color:var(--muted);margin:5px 0 0}.activity-item{border-left:2px solid #e4ebf2;padding:0 0 18px 17px;position:relative;font-size:13px}.activity-item:before{content:'';position:absolute;background:#42d1a1;border-radius:50%;width:9px;height:9px;left:-5.5px;top:3px}.activity-item:last-child{padding-bottom:0}.activity-item strong{display:block}.activity-item small{color:var(--muted)}.driver-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:13px}.driver-card{padding:18px;border:1px solid var(--line);border-radius:14px;background:white}.driver-icon{width:42px;height:42px;display:grid;place-items:center;background:#e8f9f2;color:#257759;border-radius:13px;margin-bottom:14px}.driver-card strong{font-size:15px}.driver-card p{font-size:12px;color:var(--muted);margin:7px 0 0}.modal-backdrop{position:fixed;inset:0;background:rgba(17,27,51,.58);backdrop-filter:blur(3px);z-index:10;display:flex;align-items:center;justify-content:center;padding:18px}.modal{background:white;border-radius:22px;width:min(780px,100%);max-height:calc(100dvh - 36px);display:flex;flex-direction:column;box-shadow:0 25px 80px rgba(12,26,47,.3);overflow:hidden}.modal-head{display:flex;justify-content:space-between;align-items:center;padding:22px 25px;border-bottom:1px solid var(--line)}.modal-head h2{margin:0;font-size:23px}.close{border:0;background:#f1f4f9;width:36px;height:36px;border-radius:11px;color:#72829a;font-size:20px}.modal-content{overflow-y:auto;padding:24px 25px;overscroll-behavior:contain}.modal-footer{padding:15px 25px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px;background:white;flex-wrap:wrap}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.field{display:grid;gap:7px;min-width:0}.field label{font-size:12px;font-weight:800;color:#43536c}.field.full{grid-column:1 / -1}.field textarea{resize:vertical;min-height:70px}.field-note{color:#8998ac;font-size:11px}.drop-zone{border:1px dashed #b9c9dd;background:#f7faff;border-radius:13px;padding:15px;text-align:center;font-size:13px}.drop-zone input{max-width:100%}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-cell{background:#f7f9fc;border:1px solid #edf1f6;border-radius:12px;padding:12px;min-width:0;overflow-wrap:anywhere}.detail-cell small{display:block;color:#8c9bb0;font-size:11px;margin-bottom:5px}.detail-cell strong{font-size:13px}.map-box{height:285px;min-height:230px;border-radius:15px;overflow:hidden;background:#e9eff5;margin-top:15px;position:relative}.map-missing{display:grid;place-items:center;height:100%;color:#74849d;font-size:13px;text-align:center;padding:20px}.photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px}.photo-grid img{width:100%;height:118px;object-fit:cover;border-radius:9px;background:#eaf0f4}.sign-photo{border:1px solid var(--line);border-radius:8px;max-width:100%;height:80px;object-fit:contain;background:white}.sign-box{border:1px solid #cad7e6;background:#fff;border-radius:12px;overflow:hidden;touch-action:none}.sign-box canvas{display:block;width:100%;height:145px;touch-action:none;cursor:crosshair}.callout{border-radius:13px;background:#eefaf5;color:#2e7b5e;padding:13px 15px;font-size:12px;line-height:1.6}.warn{background:#fff5e8;color:#94632a}.timeline{display:flex;gap:5px;align-items:center;margin:14px 0 20px}.timeline div{height:6px;flex:1;border-radius:6px;background:#e7edf4}.timeline .complete{background:var(--green)}.delivery-mobile{background:white;border:1px solid var(--line);border-radius:19px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}.delivery-mobile .dm-head{padding:20px 20px 10px;display:flex;justify-content:space-between;align-items:flex-start;gap:9px}.delivery-mobile .dm-body{padding:0 20px 20px}.delivery-mobile .dm-foot{background:#f9fbfe;border-top:1px solid #eef2f7;padding:15px 20px;display:flex;gap:9px;flex-wrap:wrap}.driver-hero{border-radius:23px;background:linear-gradient(120deg,#14223e,#2a5265);color:white;padding:27px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;gap:16px}.driver-hero h2{font-size:30px;line-height:1.16;max-width:380px;margin:8px 0}.driver-hero p{color:#a8c0cc;margin:0;font-size:13px}.driver-hero .hero-art{font-size:72px;filter:drop-shadow(0 10px 8px #0b182a);opacity:.95}.onroute-indicator{animation:blink 1.4s infinite;width:9px;height:9px;border-radius:50%;background:#3ce9a7;display:inline-block;margin-right:6px}@keyframes blink{50%{opacity:.3}}
@@ -43,15 +45,51 @@
 .empty-driver strong{color:#243651}
 @media(max-width:600px){.driver-header .btn{width:100%;white-space:normal}.driver-list-row{align-items:flex-start;flex-direction:column}.driver-actions{justify-content:flex-start;width:100%}.driver-stat-strip span{flex:1 1 auto}.driver-card .btn{white-space:normal}}
 
+/* Correções do rastreamento em tempo real */
+.driver-gps-icon{background:transparent;border:0}
+.driver-gps-dot{box-sizing:border-box;width:24px;height:24px;border-radius:50%;background:#10b981;border:4px solid #fff;box-shadow:0 0 0 5px rgba(16,185,129,.23),0 2px 8px rgba(10,27,48,.35)}
+.gps-meta{font-size:12px;line-height:1.55;padding:10px 12px;border-radius:10px;margin-top:11px;border:1px solid transparent;overflow-wrap:anywhere}
+.gps-wait{background:#edf4ff;border-color:#dce8fb;color:#365c92}
+.gps-online{background:#ebfbf3;border-color:#ccf1df;color:#23754d}
+.gps-stale{background:#fff5e7;border-color:#ffe2b5;color:#91581b}
+.map-box{isolation:isolate;min-width:0;touch-action:pan-x pan-y}
+.map-box .leaflet-container{z-index:0}
+@media(max-width:600px){.map-box{height:310px;min-height:260px}.public-content .map-box{height:330px!important}}
+
+/* Ordem de produção integral no card da entrega */
+.op-preview,.order-detail-card{border:1px solid #dce8f0;background:#f6fafe;border-radius:14px;padding:15px;min-width:0}
+.op-preview-status,.op-card-meta{font-size:12px;font-weight:800;color:#337b69;margin-bottom:12px}
+.op-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:9px;margin:12px 0}
+.op-field{padding:10px 12px;border:1px solid #e0e8f0;border-radius:10px;background:#fff;overflow-wrap:anywhere}
+.op-field small{display:block;color:#8290a0;font-size:11px;margin-bottom:5px}
+.op-field strong{font-size:12px;color:#283d5b;white-space:pre-wrap}
+.order-detail-card{margin-top:19px;background:#f8fbff}
+.order-detail-title{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.order-detail-title h3{font-size:17px;margin:0}
+.op-fulltext{border:1px solid #dce6ef;border-radius:12px;background:#fff;margin-top:12px;overflow:hidden}
+.op-fulltext>summary{padding:13px 14px;cursor:pointer;font-weight:800;color:#29446d;font-size:12px}
+.op-page{padding:14px;border-top:1px solid #e9edf4}
+.op-page h4{font-size:12px;margin:0 0 10px;color:#2d7b63}
+.op-page pre{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font:12px/1.65 ui-monospace,Menlo,Consolas,monospace;margin:0;color:#253853}
+.op-progress{font-size:12px;color:#71829a}
+.dm-op-summary{margin-top:12px;border:1px solid #d7eee7;background:#f2fcf8;border-radius:9px;padding:10px;font-size:11px;color:#276350}
+
 </style>
-  <title>RotaCerta • Motoristas | Firebase</title>
+  <title>RotaCerta • Entregas</title>
 </head>
 <body>
   <div id="app"><div class="boot"><div class="brand-mark">↗</div><h2>RotaCerta</h2><p>Preparando sua operação...</p></div></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
   <script type="module">
-const firebaseConfig = {"apiKey": "AIzaSyDAqtDeOwFJi-LuPp8qzKKrzjYKA1-roP4", "authDomain": "rotacerta-ee675.firebaseapp.com", "projectId": "rotacerta-ee675", "messagingSenderId": "563295797657", "appId": "1:563295797657:web:acd19d7b7506fcee279308"};
+// Configuração pública do Firebase (sem Firebase Storage).
+const firebaseConfig = {
+  "apiKey": "AIzaSyDAqtDeOwFJi-LuPp8qzKKrzjYKA1-roP4",
+  "authDomain": "rotacerta-ee675.firebaseapp.com",
+  "projectId": "rotacerta-ee675",
+  "messagingSenderId": "563295797657",
+  "appId": "1:563295797657:web:acd19d7b7506fcee279308"
+};
 
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -59,7 +97,7 @@ const app = $('#app');
 const configured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
 const DEMO_KEY = 'rotacerta_demo_v1';
 const BASE = location.protocol==='file:'?'https://seu-dominio.example/index.html':`${location.origin}${location.pathname}`;
-const S = { cloud:configured, role:null, user:null, view:'overview', deliveries:[], drivers:[], unsub:[], modal:null, maps:{}, watch:null, gpsBusy:false, gpsLast:0, gpsPoint:null, photos:[], signed:false, rating:null, filter:'todos', term:'', currentTracking:null, trackStop:null, setupView:false, bootstrapInProgress:false, registering:false, pendingUsers:[], inactiveDrivers:[], dataUnsub:[] };
+const S = { cloud:configured, role:null, user:null, view:'overview', deliveries:[], drivers:[], unsub:[], modal:null, maps:{}, watch:null, gpsBusy:false, gpsLast:0, gpsPoint:null, gpsDeliveryId:null, gpsRoute:[], gpsPaused:false, gpsResumeChecked:false, gpsError:null, gpsErrorAt:0, photos:[], signed:false, rating:null, filter:'todos', term:'', currentTracking:null, trackStop:null, setupView:false, bootstrapInProgress:false, registering:false, pendingUsers:[], inactiveDrivers:[], dataUnsub:[], opDraft:null, opLoad:null };
 let F = null, auth = null, db = null, functions = null;
 let localChannel = null, timerToast = null, memoryDemo = null;
 
@@ -103,9 +141,54 @@ function own(d){return S.role==='admin'||d.driverId===S.user?.uid;}
 function setUnsub(fn){if(fn)S.unsub.push(fn);}
 function clearDataUnsubs(){for(const fn of S.dataUnsub){try{fn();}catch{}}S.dataUnsub=[];}
 function setDataUnsub(fn){if(fn)S.dataUnsub.push(fn);}
-function clearUnsubs(){clearDataUnsubs();for(const fn of S.unsub){try{fn();}catch{}}S.unsub=[];}
-function clearMap(key){if(S.maps[key]){S.maps[key].remove();delete S.maps[key];}}
-function showMap(key,locationData){const node=document.getElementById(key);if(!node)return;clearMap(key);const coords=locationData?.lastLocation;const points=locationData?.routePoints||[];if(!window.L){node.innerHTML='<div class="map-missing">Mapa indisponível sem acesso à internet.</div>';return;}if(!coords?.lat){node.innerHTML='<div class="map-missing">📍 A localização aparecerá assim que o motorista iniciar o GPS.</div>';return;}const map=L.map(node,{zoomControl:true}).setView([coords.lat,coords.lng],14);S.maps[key]=map;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);const marker=L.divIcon({html:'<div style="width:19px;height:19px;border:4px solid white;border-radius:50%;background:#27d6a3;box-shadow:0 0 0 5px #27d6a344"></div>',iconSize:[27,27],className:''});L.marker([coords.lat,coords.lng],{icon:marker}).addTo(map).bindPopup('Última posição do motorista');const valid=points.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lng)).map(p=>[p.lat,p.lng]);if(valid.length>1){const line=L.polyline(valid,{color:'#3977de',weight:5,opacity:.85}).addTo(map);map.fitBounds(line.getBounds(),{padding:[28,28],maxZoom:15});}setTimeout(()=>map.invalidateSize(),90);}
+function clearUnsubs(){clearDataUnsubs();for(const fn of S.unsub){try{fn();}catch{}}S.unsub=[];clearMap('public-map');}
+// Mapa Leaflet persistente: não recria marcadores, tiles e zoom a cada snapshot.
+function validPosition(p){const lat=Number(p?.lat),lng=Number(p?.lng);return Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180;}
+function clearMap(key){const old=S.maps[key];if(old){try{old.map.remove();}catch(err){console.warn('Mapa anterior:',err);}delete S.maps[key];}}
+function timeAgo(ts){const t=typeof ts==='number'?ts:ts?.toMillis?.()||Date.parse(ts||'');if(!Number.isFinite(t))return null;const age=Math.max(0,Date.now()-t);return age<15000?'agora':age<60000?`há ${Math.floor(age/1000)} s`:`há ${Math.floor(age/60000)} min`;}
+function updateGpsMeta(key,doc){
+ const el=document.getElementById(key+'-info');if(!el)return;
+ const loc=doc?.lastLocation;
+ if(!validPosition(loc)){el.textContent='Aguardando a primeira posição GPS do motorista. Confira se ele tocou em Ativar GPS e permitiu a localização.';el.className='gps-meta gps-wait';return;}
+ const t=typeof loc.ts==='number'?loc.ts:loc.ts?.toMillis?.()||Date.parse(loc.ts||'');
+ const stale=!Number.isFinite(t)||Date.now()-t>90000;
+ const accuracy=Number.isFinite(Number(loc.accuracy))?` · precisão aproximada de ${Math.round(Number(loc.accuracy))} m`:'';
+ el.className='gps-meta '+(stale?'gps-stale':'gps-online');
+ el.textContent=`${stale?'⚠ Última posição conhecida':'● GPS atualizado'} ${timeAgo(loc.ts)||'sem horário'}${accuracy}${stale?' · sinal interrompido ou aplicativo em segundo plano':''}`;
+}
+function showMap(key,doc){
+ const node=document.getElementById(key);if(!node)return;
+ updateGpsMeta(key,doc);
+ const pos=doc?.lastLocation;
+ if(!window.L){node.innerHTML='<div class="map-missing">O mapa não carregou. Verifique a internet e recarregue a página.</div>';return;}
+ if(!validPosition(pos)){
+   clearMap(key);node.innerHTML='<div class="map-missing">📍 Aguardando o primeiro sinal de GPS do motorista.</div>';return;
+ }
+ const center=[Number(pos.lat),Number(pos.lng)];
+ let entry=S.maps[key];
+ if(entry && entry.node!==node){clearMap(key);entry=null;}
+ if(!entry){
+   node.replaceChildren();
+   const map=L.map(node,{zoomControl:true,preferCanvas:true}).setView(center,15);
+   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+   const dot=L.divIcon({html:'<div class="driver-gps-dot"></div>',iconSize:[24,24],iconAnchor:[12,12],className:'driver-gps-icon'});
+   const marker=L.marker(center,{icon:dot}).addTo(map).bindPopup('Posição mais recente do motorista');
+   const line=L.polyline([],{color:'#347dd8',weight:5,opacity:.86}).addTo(map);
+   entry={map,node,marker,line,follow:true};S.maps[key]=entry;
+   map.on('dragstart',()=>{entry.follow=false;});
+   setTimeout(()=>{if(node.isConnected&&S.maps[key]===entry)map.invalidateSize();},150);
+ }else{
+   entry.marker.setLatLng(center);
+   if(entry.follow)entry.map.panTo(center,{animate:true,duration:.65});
+ }
+ const points=(Array.isArray(doc.routePoints)?doc.routePoints:[])
+   .filter(validPosition).map(p=>[Number(p.lat),Number(p.lng)]);
+ entry.line.setLatLngs(points);
+}
+function centerMap(key){const entry=S.maps[key],d=key==='public-map'?S.currentTracking:findDelivery(S.modal?.dataset.deliveryId);if(!entry||!validPosition(d?.lastLocation))return;entry.follow=true;entry.map.invalidateSize();entry.map.setView([Number(d.lastLocation.lat),Number(d.lastLocation.lng)],15,{animate:true});}
+function refreshTrackingInfo(){if(S.currentTracking)updateGpsMeta('public-map',S.currentTracking);const d=findDelivery(S.modal?.dataset.deliveryId);if(d)updateGpsMeta('detail-map',d);}
+setInterval(refreshTrackingInfo,15000);
+window.addEventListener('load',()=>{if(S.currentTracking?.status==='em_rota')showMap('public-map',S.currentTracking);const d=findDelivery(S.modal?.dataset.deliveryId);if(d?.status==='em_rota')showMap('detail-map',d);});
 
 async function initCloud(){
   if(!configured)return;
@@ -136,14 +219,14 @@ function watchUserProfile(u){
    }
    const profile=snap.data();
    if(profile.active!==true || !['admin','driver'].includes(profile.role)){
-     if(S.role){clearDataUnsubs();stopGps();}
+     if(S.role){clearDataUnsubs();stopGps(true);}
      S.role=null;S.user={uid,email:u.email,name:profile.name||u.email};
      renderAwaitingApproval(profile);return;
    }
    const changed=S.role!==profile.role;
    S.user={uid,email:u.email,name:profile.name||u.email};
    
-   if(changed){clearDataUnsubs();S.role=profile.role;S.view=profile.role==='admin'?'overview':'driver';attachData();}
+   if(changed){clearDataUnsubs();S.role=profile.role;S.view=profile.role==='admin'?'overview':'driver';S.gpsResumeChecked=false;attachData();}
    else render();
  },err=>{problem(err);app.innerHTML='<div class="error-page"><h2>Não foi possível consultar seu perfil</h2><p>Confira as regras do Firestore e tente novamente.</p><button class="btn btn-outline" data-action="logout">Sair</button></div>';}));
 }
@@ -186,7 +269,7 @@ async function requestAccess(form){await savePendingProfile(new FormData(form).g
 async function boot(){
   try{if('serviceWorker'in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
     if(!configured){const d=readDemo();S.deliveries=d.deliveries;S.drivers=d.drivers;S.pendingUsers=d.pendingUsers||[];S.inactiveDrivers=d.inactiveDrivers||[];localChannel='BroadcastChannel'in window?new BroadcastChannel('rotacerta-demo'):null;if(localChannel)localChannel.onmessage=reloadDemo;window.addEventListener('storage',ev=>{if(ev.key===DEMO_KEY)reloadDemo();});const publicRoute=new URLSearchParams(location.search);if(publicRoute.has('track'))return renderTrackingDemo();if(publicRoute.has('nps'))return renderNpsDemo();renderLogin();}
-    else{await initCloud();const p=new URLSearchParams(location.search);if(p.has('track'))return cloudTracking(p.get('track'));if(p.has('nps'))return cloudNps(p.get('nps'));F.onAuthStateChanged(auth,u=>{if(!u){clearUnsubs();stopGps();S.role=null;S.user=null;S.registering=false;renderLogin();return;}if(S.bootstrapInProgress||S.registering)return;watchUserProfile(u);});}
+    else{await initCloud();const p=new URLSearchParams(location.search);if(p.has('track'))return cloudTracking(p.get('track'));if(p.has('nps'))return cloudNps(p.get('nps'));F.onAuthStateChanged(auth,u=>{if(!u){clearUnsubs();stopGps(true);S.role=null;S.user=null;S.registering=false;renderLogin();return;}if(S.bootstrapInProgress||S.registering)return;watchUserProfile(u);});}
   }catch(err){console.error(err);app.innerHTML=`<div class="error-page"><h2>Falha ao iniciar o aplicativo</h2><p>${e(err.message)}</p><p>Confira sua conexão e o arquivo firebase-config.js.</p></div>`;}
 }
 function renderLogin(){
@@ -197,7 +280,7 @@ function renderLogin(){
 function attachData(){
   if(!configured)return;
   if(S.role==='admin'){setDataUnsub(F.onSnapshot(F.collection(db,'deliveries'),snap=>{S.deliveries=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));render();},problem));setDataUnsub(F.onSnapshot(F.collection(db,'users'),snap=>{const users=snap.docs.map(x=>({uid:x.id,...x.data()}));S.drivers=users.filter(x=>x.role==='driver'&&x.active===true);S.pendingUsers=users.filter(x=>x.role==='driver'&&x.active!==true&&!x.approvedAt);S.inactiveDrivers=users.filter(x=>x.role==='driver'&&x.active!==true&&!!x.approvedAt);render();},problem));}
-  else{setDataUnsub(F.onSnapshot(F.query(F.collection(db,'deliveries'),F.where('driverId','==',S.user.uid)),snap=>{S.deliveries=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));render();},problem));}
+  else{setDataUnsub(F.onSnapshot(F.query(F.collection(db,'deliveries'),F.where('driverId','==',S.user.uid)),snap=>{S.deliveries=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));render();resumeGpsIfAllowed();},problem));}
   render();
 }
 function enterDemo(role){S.role=role;S.user=role==='admin'?{uid:'admin-demo',name:'Administrador',email:'admin@demo.test'}:{uid:'driver-demo',name:'Motorista demonstração',email:'motorista@demo.test'};S.view=role==='admin'?'overview':'driver';render();}
@@ -206,7 +289,7 @@ function shellMain(){const nav=navigation(),selected=S.view,title={overview:['Pa
 function mainSection(){if(S.view==='overview')return overview();if(S.view==='deliveries')return deliveryPanel();if(S.view==='drivers')return driversPanel();return driverPanel();}
 function stats(){const all=S.deliveries;const pending=all.filter(d=>d.status==='pendente').length,onroute=all.filter(d=>d.status==='em_rota').length,done=all.filter(d=>d.status==='entregue').length;const scores=all.map(d=>d.nps?.score).filter(x=>Number.isInteger(x));const nps=scores.length?Math.round(100*(scores.filter(x=>x>=9).length-scores.filter(x=>x<=6).length)/scores.length):'—';return `<div class="stats-grid">${[['▤','Total de entregas',all.length,'Pedidos registrados'],['◷','Aguardando',pending,'Prontas para despachar'],['↗','Em rota',onroute,'Acompanhamento ao vivo'],['★','NPS da operação',nps,`${scores.length} avaliações · −100 a +100`]].map(x=>`<div class="stat-card"><div class="stat-top"><span>${x[1]}</span><span class="stat-icon">${x[0]}</span></div><div class="stat-number">${x[2]}</div><div class="stat-note">${x[3]}</div></div>`).join('')}</div>`;}
 function filtered(){return S.deliveries.filter(d=>(S.filter==='todos'||d.status===S.filter)&&(!S.term||[d.customerName,d.code,d.orderNumber,d.driverName,d.city].join(' ').toLowerCase().includes(S.term.toLowerCase())));}
-function rows(items){if(!items.length)return `<div class="empty"><div class="empty-big">📦</div><strong>Nenhuma entrega encontrada</strong><p>Cadastre uma entrega ou ajuste os filtros.</p></div>`;return items.map(d=>`<article class="delivery-row"><div><div class="row-code">${e(d.code)} · ${e(d.orderNumber||'Sem OP')}</div><div class="row-name">${e(d.customerName)}</div><div class="row-muted">📍 ${e(d.city||d.address)} · ${formatDate(d.createdAt)}</div></div><div class="row-driver"><div style="font-size:12px;font-weight:700">🚚 ${e(d.driverName||'Não atribuído')}</div><div class="row-muted">${d.status==='entregue'?(d.nps?.score!==undefined?'⭐ Avaliação '+d.nps.score+'/10':'Aguardando NPS'):d.status==='em_rota'?'Acompanhe a localização':'Ordem pendente'}</div></div><div class="row-last">${badge(d.status)}${btn('detail','Ver detalhes →','btn-soft btn-sm',`data-id="${e(d.id)}"`)}</div></article>`).join('');}
+function rows(items){if(!items.length)return `<div class="empty"><div class="empty-big">📦</div><strong>Nenhuma entrega encontrada</strong><p>Cadastre uma entrega ou ajuste os filtros.</p></div>`;return items.map(d=>`<article class="delivery-row"><div><div class="row-code">${e(d.code)} · ${e(d.orderNumber||'Sem OP')}</div><div class="row-name">${e(d.customerName)}</div><div class="row-muted">📍 ${e(d.city||d.address)} · ${formatDate(d.createdAt)}${d.orderTextAvailable?' · 📋 OP lida':''}</div></div><div class="row-driver"><div style="font-size:12px;font-weight:700">🚚 ${e(d.driverName||'Não atribuído')}</div><div class="row-muted">${d.status==='entregue'?(d.nps?.score!==undefined?'⭐ Avaliação '+d.nps.score+'/10':'Aguardando NPS'):d.status==='em_rota'?'Acompanhe a localização':'Ordem pendente'}</div></div><div class="row-last">${badge(d.status)}${btn('detail','Ver detalhes →','btn-soft btn-sm',`data-id="${e(d.id)}"`)}</div></article>`).join('');}
 function filtersHTML(){return `<div class="filters"><div class="search"><input id="searchDeliveries" value="${e(S.term)}" type="search" placeholder="Buscar cliente, entrega ou OP..."></div><select id="filterStatus" class="filter-select"><option value="todos" ${S.filter==='todos'?'selected':''}>Todos os status</option><option value="pendente" ${S.filter==='pendente'?'selected':''}>Aguardando</option><option value="em_rota" ${S.filter==='em_rota'?'selected':''}>Em rota</option><option value="entregue" ${S.filter==='entregue'?'selected':''}>Entregue</option></select></div>`;}
 function overview(){const recent=S.deliveries.filter(d=>d.status==='entregue').slice(0,4);return `${stats()}<div class="split"><section class="panel"><div class="panel-head"><div><h2 class="panel-title">Entregas recentes</h2><p class="panel-sub">Visão rápida dos pedidos cadastrados</p></div>${btn('new-delivery','＋ Nova entrega','btn-primary')}</div><div class="delivery-list">${rows(S.deliveries.slice(0,7))}</div><div style="margin-top:17px;text-align:center">${btn('view','Ver todas as entregas →','btn-outline btn-sm','data-view="deliveries"')}</div></section><section class="panel"><div class="panel-head"><div><h2 class="panel-title">Atividade da operação</h2><p class="panel-sub">Últimos eventos</p></div></div>${recent.length?recent.map(d=>`<div class="activity-item"><strong>${e(d.customerName)}</strong><small>Entrega concluída · ${formatDate(d.deliveredAt)}</small></div>`).join(''):'<p class="sub" style="font-size:13px">As entregas finalizadas aparecerão aqui.</p>'}<div class="info-box" style="margin-top:26px"><div class="num">${S.deliveries.filter(d=>d.status==='entregue').length}</div><p>Entregas finalizadas no histórico</p></div></section></div>`;}
 function deliveryPanel(){return `<section class="panel"><div class="panel-head"><div><h2 class="panel-title">Todos os pedidos</h2><p class="panel-sub">${S.deliveries.length} entrega(s) cadastrada(s)</p></div>${btn('new-delivery','＋ Nova entrega','btn-primary')}</div>${filtersHTML()}<div id="deliveryResults" class="delivery-list">${rows(filtered())}</div></section>`;}
@@ -216,29 +299,153 @@ function driversPanel(){
  const inactive=S.inactiveDrivers.map(x=>`<div class="driver-list-row"><div class="driver-list-person"><strong>${e(x.name||'Motorista')}</strong><small>${e(x.email||'')}${x.phone?' · '+e(x.phone):''}</small></div><div class="driver-actions"><span class="status status-pendente">Desativado</span>${btn('driver-access','Reativar','btn-outline btn-sm',`data-uid="${e(x.uid)}" data-enabled="true"`)}</div></div>`).join('');
  return `<section class="panel"><div class="panel-head driver-header"><div><h2 class="panel-title">Motoristas cadastrados</h2><p class="panel-sub">Cadastre um motorista diretamente neste painel. Ele receberá acesso à área de entregas com login próprio.</p></div>${btn('new-driver','＋ Cadastrar motorista','btn-primary')}</div><div class="driver-stat-strip"><span>🚚 <strong>${S.drivers.length}</strong> ativos</span><span>⏳ <strong>${S.pendingUsers.length}</strong> aguardando</span><span>⏸ <strong>${S.inactiveDrivers.length}</strong> desativados</span></div><div class="driver-cards">${activeCards||'<div class="empty-driver"><strong>Nenhum motorista ativo</strong><p>Comece usando o botão Cadastrar motorista. A conta será criada no Firebase Authentication.</p></div>'}</div></section><section class="panel" style="margin-top:18px"><div class="panel-head"><div><h2 class="panel-title">Aprovação de cadastros</h2><p class="panel-sub">${S.pendingUsers.length} solicitações. Você pode aprovar pelo próprio painel, sem abrir o Console Firebase.</p></div></div>${pending||'<p class="sub">Não há usuários aguardando aprovação.</p>'}</section>${S.inactiveDrivers.length?`<section class="panel" style="margin-top:18px"><div class="panel-head"><h2 class="panel-title">Motoristas desativados</h2></div>${inactive}</section>`:''}<div class="callout" style="margin-top:18px">🔒 Somente administradores ativos podem cadastrar, aprovar ou desativar motoristas. Senhas são gerenciadas no Firebase Authentication e não ficam salvas no Firestore. ${configured?'Cadastros e liberações funcionam sem Cloud Functions, com regras de segurança do Firestore.':'Nesta demonstração os registros são apenas locais.'}</div>`;
 }
-function driverPanel(){const tasks=S.deliveries.filter(d=>own(d));return `<div class="driver-hero"><div><span style="font-weight:800;color:#54e1b6;font-size:12px">🚚 ÁREA DO MOTORISTA</span><h2>Boas entregas,<br>${e(S.user.name.split(' ')[0])}!</h2><p>Você tem ${tasks.filter(d=>d.status!=='entregue').length} entrega(s) em aberto.</p></div><div class="hero-art">📦</div></div>${tasks.filter(d=>d.status==='em_rota').length?`<div class="callout" style="margin-bottom:16px"><span class="onroute-indicator"></span> Entrega em andamento. Deixe o aplicativo aberto e permita acesso à localização.</div>`:''}<div class="panel-head"><div><h2 class="panel-title">Minha lista de entregas</h2><p class="panel-sub">Confira o pedido antes de iniciar a viagem</p></div></div>${tasks.length?tasks.map(d=>`<div class="delivery-mobile"><div class="dm-head"><div><div class="row-code">${e(d.code)} · ${e(d.orderNumber||'Sem OP')}</div><h3 style="font-size:21px;margin:6px 0">${e(d.customerName)}</h3></div>${badge(d.status)}</div><div class="dm-body"><div style="font-size:13px;color:#5d6f86;margin:5px 0 12px">📍 ${e(d.address)}, ${e(d.city)}</div><div style="font-size:12px;color:#8594a9">${d.notes?e(d.notes):'Sem observações adicionais.'}</div>${d.status==='em_rota'?'<div class="timeline"><div class="complete"></div><div class="complete"></div><div></div></div>':''}</div><div class="dm-foot">${btn('detail','Detalhes','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${d.status==='pendente'?btn('start','▶ Iniciar entrega','btn-green',`data-id="${e(d.id)}"`):''}${d.status==='em_rota'?`${btn('finish-open','✓ Concluir entrega','btn-green',`data-id="${e(d.id)}"`)}${btn('activate-gps','📍 Ativar GPS','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${btn('wa-start','✉ Mensagem pronta','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${!configured?btn('simulate','Simular rota','btn-soft btn-sm',`data-id="${e(d.id)}"`):''}`:''}${d.status==='entregue'?'<span class="sub" style="font-size:12px;align-self:center">✓ Comprovante registrado</span>':''}</div></div>`).join(''):`<div class="empty"><div class="empty-big">🛣️</div><strong>Sem entregas atribuídas</strong><p>O administrativo deve selecionar você como motorista.</p></div>`}`;}
+function driverPanel(){const tasks=S.deliveries.filter(d=>own(d));return `<div class="driver-hero"><div><span style="font-weight:800;color:#54e1b6;font-size:12px">🚚 ÁREA DO MOTORISTA</span><h2>Boas entregas,<br>${e(S.user.name.split(' ')[0])}!</h2><p>Você tem ${tasks.filter(d=>d.status!=='entregue').length} entrega(s) em aberto.</p></div><div class="hero-art">📦</div></div>${tasks.filter(d=>d.status==='em_rota').length?`<div class="callout" style="margin-bottom:16px"><span class="onroute-indicator"></span> Entrega em andamento. ${S.watch!==null?'GPS ativado neste aparelho.':'Toque em <b>Ativar GPS</b> para compartilhar sua posição.'} Mantenha o app aberto e o celular desbloqueado durante o percurso.</div>`:''}<div class="panel-head"><div><h2 class="panel-title">Minha lista de entregas</h2><p class="panel-sub">Confira o pedido antes de iniciar a viagem</p></div></div>${tasks.length?tasks.map(d=>`<div class="delivery-mobile"><div class="dm-head"><div><div class="row-code">${e(d.code)} · ${e(d.orderNumber||'Sem OP')}</div><h3 style="font-size:21px;margin:6px 0">${e(d.customerName)}</h3></div>${badge(d.status)}</div><div class="dm-body"><div style="font-size:13px;color:#5d6f86;margin:5px 0 12px">📍 ${e(d.address)}, ${e(d.city)}</div><div style="font-size:12px;color:#8594a9">${d.notes?e(d.notes):'Sem observações adicionais.'}</div>${d.orderTextAvailable?`<div class="dm-op-summary">📋 OP importada · ${d.orderPageCount||1} pág. · <strong>Toque em Detalhes para ver o pedido completo</strong></div>`:''}${d.status==='em_rota'?'<div class="timeline"><div class="complete"></div><div class="complete"></div><div></div></div>':''}</div><div class="dm-foot">${btn('detail','Detalhes','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${d.status==='pendente'?btn('start','▶ Iniciar entrega','btn-green',`data-id="${e(d.id)}"`):''}${d.status==='em_rota'?`${btn('finish-open','✓ Concluir entrega','btn-green',`data-id="${e(d.id)}"`)}${btn('activate-gps','📍 Ativar GPS','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${btn('wa-start','✉ Mensagem pronta','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${!configured?btn('simulate','Simular rota','btn-soft btn-sm',`data-id="${e(d.id)}"`):''}`:''}${d.status==='entregue'?'<span class="sub" style="font-size:12px;align-self:center">✓ Comprovante registrado</span>':''}</div></div>`).join(''):`<div class="empty"><div class="empty-big">🛣️</div><strong>Sem entregas atribuídas</strong><p>O administrativo deve selecionar você como motorista.</p></div>`}`;}
 function render(){if(!S.role)return renderLogin();const active=document.activeElement;const focusingSearch=active?.id==='searchDeliveries';const pos=focusingSearch?active.selectionStart:null;app.innerHTML=shellMain();const detailMap=document.getElementById('detail-map');if(detailMap && S.modal?.dataset.deliveryId){const fresh=findDelivery(S.modal.dataset.deliveryId);if(fresh?.status==='em_rota')showMap('detail-map',fresh);}if(focusingSearch){const n=$('#searchDeliveries');n.focus();n.setSelectionRange(pos,pos);}const activeD=S.deliveries.find(d=>d.status==='em_rota'&&d.driverId===S.user?.uid);if(S.role==='driver' && activeD && S.watch===null && !S.gpsPaused){/* GPS starts only after explicit user click/permission, not on page render */}}
 
 function modal(title,content,footer=''){closeModal();const wrap=document.createElement('div');wrap.className='modal-backdrop';wrap.id='modalHost';wrap.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-label="${e(title)}"><div class="modal-head"><h2>${e(title)}</h2><button data-action="close-modal" class="close" aria-label="Fechar">×</button></div><div class="modal-content">${content}</div>${footer?`<div class="modal-footer">${footer}</div>`:''}</div>`;wrap.addEventListener('click',ev=>{if(ev.target===wrap)closeModal();});document.body.append(wrap);S.modal=wrap;}
-function closeModal(){clearMap('detail-map');S.modal?.remove();S.modal=null;S.photos=[];S.signed=false;}
-function deliveryForm(){if(!S.drivers.length){toast('Cadastre um motorista primeiro.');S.view='drivers';return render();}const content=`<form id="newDeliveryForm"><div class="fields"><div class="field"><label>Nome do cliente *</label><input name="customerName" maxlength="100" required placeholder="Nome ou razão social"></div><div class="field"><label>WhatsApp do cliente *</label><input name="customerPhone" inputmode="tel" required placeholder="(47) 99999-9999"></div><div class="field full"><label>Endereço completo *</label><input name="address" required maxlength="220" placeholder="Rua, número, bairro e complemento"></div><div class="field"><label>Cidade / UF *</label><input name="city" required maxlength="100" placeholder="Jaraguá do Sul / SC"></div><div class="field"><label>Número da ordem de produção *</label><input name="orderNumber" required maxlength="80" placeholder="OP-1234"></div><div class="field"><label>Motorista *</label><select name="driverId" required><option value="">Selecione</option>${S.drivers.map(d=>`<option value="${e(d.uid)}">${e(d.name)}</option>`).join('')}</select></div><div class="field"><label>Referência para entrega</label><input name="reference" maxlength="100" placeholder="Portaria, galpão..."></div><div class="field full"><label>Orientações ao motorista</label><textarea name="notes" maxlength="1000" placeholder="Cuidados com os produtos, horário de recebimento..."></textarea></div><div class="field full"><label>Ordem de produção (PDF ou imagem)</label><div class="drop-zone">📄 &nbsp; <input name="orderFile" type="file" accept="application/pdf,image/*"><div class="field-note" style="margin-top:9px">Até 5 MB. O arquivo será salvo no Google Drive privado da empresa e poderá ser aberto pelo motorista.</div></div><div class="field full"><label style="display:flex;gap:9px;align-items:flex-start"><input type="checkbox" name="whatsappOptIn" style="width:18px;height:18px;flex-shrink:0;margin-top:2px"> O cliente concorda em receber contato manual pelo WhatsApp para acompanhamento da entrega e avaliação.</label><div class="field-note">Este aplicativo apenas prepara a mensagem, sem disparos automáticos. O operador decide se e quando enviá-la.</div></div></div><button type="submit" class="hidden" id="submitDelivery"></button></form>`;modal('Cadastrar nova entrega',content,btn('close-modal','Cancelar')+`<button type="submit" form="newDeliveryForm" class="btn btn-green">✓ Cadastrar entrega</button>`);}
+function closeModal(){clearMap('detail-map');S.modal?.remove();S.modal=null;S.photos=[];S.signed=false;S.opDraft=null;S.opLoad=null;}
+// Leitura local da ordem de produção, sem enviar o PDF para serviços de terceiros.
+// PDF.js é baixado pelo navegador; o conteúdo extraído só segue para o Firestore privado.
+const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+let pdfjsPromise;
+async function loadPdfjs(){
+ if(!pdfjsPromise)pdfjsPromise=import(PDFJS_CDN).then(mod=>{mod.GlobalWorkerOptions.workerSrc=PDFJS_WORKER;return mod;}).catch(err=>{pdfjsPromise=null;throw Error('Não foi possível carregar o leitor de PDF. Verifique a internet e tente novamente. '+(err?.message||''));});
+ return pdfjsPromise;
+}
+function normalizeDriveUrl(value){
+ const raw=String(value||'').trim();if(!raw)return '';
+ let url;try{url=new URL(raw);}catch{throw Error('Informe um link completo do Google Drive (https://...).');}
+ if(url.protocol!=='https:'||!['drive.google.com','docs.google.com'].includes(url.hostname))throw Error('O documento original deve usar um link HTTPS do Google Drive.');
+ return url.href;
+}
+function extractOrderFields(text){
+ const lines=String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+ const fields=[],found=new Set();
+ const labels=/^(?:ordem(?:\s+de\s+produ[cç][aã]o)?|op|n[úu]mero\s+do\s+pedido|pedido|cliente|raz[aã]o\s+social|cnpj|cpf|data(?:\s+de\s+entrega)?|produto|item|descri[cç][aã]o|quantidade|qtd|medidas?|largura|altura|volume|cor|modelo|peso|refer[eê]ncia|observa[cç][oõ]es|endereco|endere[cç]o|cidade|prazo|transportadora|total)(?:\s*\([^)]*\))?\s*[:#\-–]\s*(.{1,180})$/i;
+ for(const line of lines){const m=line.match(labels);if(!m)continue;const key=m[0].slice(0,m[0].indexOf(m[1])).replace(/[:#\-–\s]+$/,'').trim()||'Campo';if(!found.has(key.toLowerCase())){fields.push({label:key,value:m[1].trim()});found.add(key.toLowerCase());}if(fields.length>=45)break;}
+ return fields;
+}
+function splitSafe(text,max=55000){
+ const arr=[];for(let i=0;i<text.length;i+=max)arr.push(text.slice(i,i+max));return arr;
+}
+function plainPages(text){
+ const safe=String(text||'').replace(/\r\n?/g,'\n').trim();
+ if(!safe)return [];
+ const chunks=splitSafe(safe);return chunks.map((chunk,i)=>({page:i+1,part:i+1,text:chunk}));
+}
+async function extractOpFile(file){
+ if(!file?.size)return {pages:[],totalPages:0,warning:'Anexe a OP para leitura ou digite o conteúdo completo no campo abaixo.',fields:[]};
+ if(file.size>5*1024*1024)throw Error('O PDF da OP deve ter até 5 MB para leitura neste aplicativo.');
+ if(!/\.pdf$/i.test(file.name)&&file.type!=='application/pdf'){
+   return {pages:[],totalPages:0,warning:'A ordem enviada é imagem ou documento escaneado: este leitor não faz OCR. Digite/transcreva o conteúdo ou envie um PDF com texto selecionável.',fields:[]};
+ }
+ const pdfjs=await loadPdfjs(),data=new Uint8Array(await file.arrayBuffer());
+ let pdf;try{pdf=await pdfjs.getDocument({data}).promise;}catch{throw Error('Este PDF não pode ser lido. Confira se ele abre normalmente e se não está protegido por senha.');}
+ if(pdf.numPages>100)throw Error('Este arquivo tem mais de 100 páginas. Divida a OP em arquivos menores e associe uma por entrega.');
+ const pages=[];let total=0,unreadable=0;
+ for(let i=1;i<=pdf.numPages;i++){
+   const page=await pdf.getPage(i),content=await page.getTextContent();
+   const items=content.items.filter(x=>typeof x.str==='string');
+   let lastY=null,line='',lines=[];
+   for(const item of items){
+     const y=item.transform?.[5];
+     if(lastY!==null && Number.isFinite(y) && Math.abs(lastY-y)>3){if(line.trim())lines.push(line.trimEnd());line='';}
+     line+=item.str+(item.hasEOL?'\n':' ');
+     if(item.hasEOL){if(line.trim())lines.push(line.trimEnd());line='';}
+     if(Number.isFinite(y))lastY=y;
+   }
+   if(line.trim())lines.push(line.trimEnd());
+   const text=lines.join('\n').trim();if(text.length<10)unreadable++;
+   total+=text.length;
+   if(total>3_000_000)throw Error('A ordem contém texto muito extenso (mais de 3 milhões de caracteres). Divida a OP em documentos menores.');
+   for(const [part,chunk] of splitSafe(text).entries())pages.push({page:i,part:part+1,text:chunk});
+ }
+ const combined=pages.map(p=>p.text).join('\n');
+ return {pages,totalPages:pdf.numPages,fields:extractOrderFields(combined),warning:unreadable?`${unreadable} página(s) não forneceram texto suficiente. Se forem imagens/escaneadas, será necessário OCR ou transcrição manual antes de salvar.`:''};
+}
+async function previewOpFile(file){
+ const target=$('#opPreview');if(!target)return;
+ target.innerHTML='<span class="op-progress">⏳ Lendo páginas do documento...</span>';
+ S.opDraft=null;
+ try{
+  const parsed=await extractOpFile(file);
+  if(!$('#newDeliveryForm'))return;
+  S.opDraft={fileName:file?.name||'',fileSize:file?.size||0,fileModified:file?.lastModified||0,...parsed};
+  const text=parsed.pages.map(p=>p.text).join('\n');
+  const raw=$('#orderManualText');if(raw&&text)raw.value=text;
+  const detected=parsed.fields.map(x=>`<span class="op-field"><small>${e(x.label)}</small><strong>${e(x.value)}</strong></span>`).join('');
+  target.innerHTML=`<div class="op-preview-status">${parsed.pages.length?'✅':'⚠️'} ${parsed.totalPages} página(s) · ${text.length.toLocaleString('pt-BR')} caracteres extraídos</div>${detected?`<div class="op-fields">${detected}</div>`:''}${parsed.warning?`<div class="callout warn" style="margin-top:8px">${e(parsed.warning)}</div>`:''}<p class="field-note" style="margin-top:7px">Confira e corrija o texto no campo abaixo; ele será mostrado integralmente no card da entrega.</p>`;
+ }catch(err){S.opDraft=null;target.innerHTML=`<div class="callout warn">Não foi possível ler automaticamente: ${e(err.message)}</div>`;problem(err);}
+}
+async function getOrderPages(d){
+ if(!configured)return d.orderPages||[];
+ const snap=await F.getDocs(F.collection(db,'deliveries',d.id,'orderPages'));
+ return snap.docs.map(x=>x.data()).sort((a,b)=>a.page-b.page||a.part-b.part);
+}
+async function populateOrderCard(d){
+ const container=$('#order-content');if(!container||S.modal?.dataset.deliveryId!==d.id)return;
+ try{
+  const chunks=await getOrderPages(d);
+  if(!container.isConnected||S.modal?.dataset.deliveryId!==d.id)return;
+  if(!chunks.length){container.innerHTML='<div class="callout warn">O texto da OP ainda não foi importado. Para pedidos antigos, cadastre novamente a OP ou anexe o texto extraído.</div>';return;}
+  const pages=new Map();for(const chunk of chunks){const n=chunk.page||1;pages.set(n,(pages.get(n)||'')+(chunk.text||''));}
+  const words=[...pages.values()].join('\n');
+  const fields=extractOrderFields(words);
+  container.innerHTML=`<div class="op-card-meta">📄 ${pages.size} página(s) · ${words.length.toLocaleString('pt-BR')} caracteres · conteúdo completo da OP</div>${fields.length?`<div class="op-fields">${fields.map(x=>`<div class="op-field"><small>${e(x.label)}</small><strong>${e(x.value)}</strong></div>`).join('')}</div>`:''}<details class="op-fulltext" open><summary>Ver todo o conteúdo do pedido, página por página</summary>${[...pages.entries()].map(([n,text])=>`<section class="op-page"><h4>Página ${n}</h4><pre>${e(text)}</pre></section>`).join('')}</details>`;
+ }catch(err){container.innerHTML=`<div class="callout warn">Não foi possível carregar a OP. Verifique se as novas regras foram publicadas: ${e(err.message)}</div>`;}
+}
+function deliveryForm(){if(!S.drivers.length){toast('Cadastre um motorista primeiro.');S.view='drivers';return render();}const content=`<form id="newDeliveryForm"><div class="fields"><div class="field"><label>Nome do cliente *</label><input name="customerName" maxlength="100" required placeholder="Nome ou razão social"></div><div class="field"><label>WhatsApp do cliente *</label><input name="customerPhone" inputmode="tel" required placeholder="(47) 99999-9999"></div><div class="field full"><label>Endereço completo *</label><input name="address" required maxlength="220" placeholder="Rua, número, bairro e complemento"></div><div class="field"><label>Cidade / UF *</label><input name="city" required maxlength="100" placeholder="Jaraguá do Sul / SC"></div><div class="field"><label>Número da ordem de produção *</label><input name="orderNumber" required maxlength="80" placeholder="OP-1234"></div><div class="field"><label>Motorista *</label><select name="driverId" required><option value="">Selecione</option>${S.drivers.map(d=>`<option value="${e(d.uid)}">${e(d.name)}</option>`).join('')}</select></div><div class="field"><label>Referência para entrega</label><input name="reference" maxlength="100" placeholder="Portaria, galpão..."></div><div class="field full"><label>Orientações ao motorista</label><textarea name="notes" maxlength="1000" placeholder="Cuidados com os produtos, horário de recebimento..."></textarea></div><div class="field full"><label>Ordem de produção (PDF ou imagem)</label><div class="drop-zone">📄 &nbsp; <input name="orderFile" type="file" accept="application/pdf,image/*"><div class="field-note" style="margin-top:9px">Até 5 MB. O arquivo será lido localmente para extrair as informações. Para abrir o PDF original depois, informe abaixo o link de acesso do Google Drive.</div></div><div class="field full"><label>Link privado da ordem no Google Drive (opcional)</label><input name="orderDriveUrl" type="url" inputmode="url" placeholder="https://drive.google.com/file/d/.../view"><div class="field-note">Primeiro envie o PDF ao Drive e cole o link aqui. O aplicativo <strong>não envia automaticamente arquivos ao Drive</strong> nesta versão sem Cloud Functions.</div></div><div class="field full"><div id="opPreview" class="op-preview"><span class="field-note">Selecione um PDF para ler o pedido e preencher este card.</span></div></div><div class="field full"><label>Conteúdo integral da OP (confira antes de cadastrar)</label><textarea id="orderManualText" name="orderManualText" rows="7" maxlength="3000000" placeholder="O texto extraído do PDF aparecerá aqui. Você pode corrigir ou digitar a OP, especialmente quando o arquivo for escaneado."></textarea><div class="field-note">Todos os dados digitados serão armazenados em páginas privadas do Firestore e visíveis ao administrativo e ao motorista responsável. Não serão exibidos no link público de rastreamento.</div></div><div class="field full"><label style="display:flex;gap:9px;align-items:flex-start"><input type="checkbox" name="whatsappOptIn" style="width:18px;height:18px;flex-shrink:0;margin-top:2px"> O cliente concorda em receber contato manual pelo WhatsApp para acompanhamento da entrega e avaliação.</label><div class="field-note">Este aplicativo apenas prepara a mensagem, sem disparos automáticos. O operador decide se e quando enviá-la.</div></div></div><button type="submit" class="hidden" id="submitDelivery"></button></form>`;modal('Cadastrar nova entrega',content,btn('close-modal','Cancelar')+`<button type="submit" form="newDeliveryForm" class="btn btn-green">✓ Cadastrar entrega</button>`);}
 function newDriverForm(){
  if(S.role!=='admin')throw Error('Somente o administrador pode cadastrar motoristas.');
  const content=`<form id="newDriverForm"><div class="fields"><div class="field full"><label>Nome completo do motorista *</label><input name="name" required minlength="3" maxlength="100" autocomplete="off" placeholder="Ex.: João da Silva"></div><div class="field"><label>E-mail de acesso *</label><input type="email" name="email" required autocomplete="off" placeholder="motorista@empresa.com"></div><div class="field"><label>Telefone com DDD (opcional)</label><input name="phone" type="tel" inputmode="tel" maxlength="20" placeholder="(47) 99999-9999"></div>${configured?`<div class="field"><label>Senha inicial *</label><input type="password" name="password" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="Mínimo de 12 caracteres"></div><div class="field"><label>Confirmar senha *</label><input type="password" name="confirmPassword" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="Repita a senha inicial"></div>`:''}<div class="field full"><label class="driver-check"><input type="checkbox" name="activateNow" checked><span><strong>Liberar acesso imediatamente</strong><small>O motorista já poderá entrar com o e-mail e a senha. Se desmarcar, ficará pendente até você aprovar.</small></span></label></div><div class="field full"><div class="callout">A conta será criada no <b>Firebase Authentication</b> e o perfil <code>driver</code> no Firestore. O motorista verá apenas as entregas atribuídas a ele. A senha não será armazenada nem enviada pelo WhatsApp automaticamente.</div></div></div></form>`;
  modal('Cadastrar motorista',content,btn('close-modal','Cancelar')+`<button form="newDriverForm" type="submit" class="btn btn-green">✓ Criar motorista</button>`);
 }
-function detail(d){if(!d)return;const proof=d.proof||{},photoFiles=proof.photos||[],driver=S.role==='driver';let photoText='Nenhuma foto anexada';if(photoFiles.length)photoText=`<div class="photo-grid">${photoFiles.map((p,i)=>p.dataUrl?`<img loading="lazy" src="${p.dataUrl}" alt="Foto ${i+1}">`:`<button type="button" class="btn btn-soft btn-sm" data-action="file-open" data-drive-id="${e(p.driveFileId||'')}">📷 Foto ${i+1}</button>`).join('')}</div>`;const p=`<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:18px"><div><div class="row-code">${e(d.code)} · ${e(d.orderNumber||'Sem OP')}</div><h3 style="font-size:21px;margin:4px 0">${e(d.customerName)}</h3></div>${badge(d.status)}</div><div class="detail-grid"><div class="detail-cell"><small>Endereço</small><strong>${e(d.address)}, ${e(d.city)}</strong></div><div class="detail-cell"><small>Motorista</small><strong>${e(d.driverName)}</strong></div><div class="detail-cell"><small>Telefone</small><strong>${e(d.customerPhone)}</strong></div><div class="detail-cell"><small>Ordem de produção</small><strong>${e(d.orderNumber||'—')}</strong></div><div class="detail-cell"><small>Início da entrega</small><strong>${formatDate(d.startedAt)}</strong></div><div class="detail-cell"><small>Finalização</small><strong>${formatDate(d.deliveredAt)}</strong></div></div>${d.reference||d.notes?`<div class="callout warn" style="margin-top:13px">${d.reference?`<strong>Referência:</strong> ${e(d.reference)}<br>`:''}${d.notes?`<strong>Observações:</strong> ${e(d.notes)}`:''}</div>`:''}<div class="mini-actions">${d.orderFile?btn('file-open','📄 Abrir ordem de produção','btn-outline btn-sm',`data-drive-id="${e(d.orderFile.driveFileId||'')}" data-url="${e(d.orderFile.dataUrl||'')}"`):'<span class="sub" style="font-size:12px">Nenhum arquivo OP anexado</span>'}${btn('navigate','🧭 Abrir no Maps','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${d.status!=='pendente'?btn('copy-track','🔗 Copiar rastreamento','btn-outline btn-sm',`data-id="${e(d.id)}"`):''}</div>${d.status==='em_rota'?`<h3 style="margin:22px 0 3px">📍 Rota ao vivo</h3><div class="map-box" id="detail-map"></div><div class="field-note" style="margin-top:9px">Posição atualizada enquanto o app do motorista permanece aberto com GPS permitido.</div>`:''}${d.status==='entregue'?`<h3 style="margin:23px 0 11px">Comprovante de entrega</h3><div class="detail-grid"><div class="detail-cell"><small>Recebido por</small><strong>${e(proof.recipientName||'—')}</strong></div><div class="detail-cell"><small>CPF do recebedor</small><strong>${maskCPF(proof.cpf)}</strong></div></div><div style="margin-top:13px"><strong style="font-size:12px">Fotos da entrega</strong>${photoText}</div>${proof.signatureDataUrl?`<h4 style="margin:20px 0 7px">Assinatura</h4><img class="sign-photo" src="${proof.signatureDataUrl}" alt="Assinatura">`:proof.signatureDriveId?`<div class="mini-actions">${btn('file-open','✍ Visualizar assinatura','btn-outline btn-sm',`data-drive-id="${e(proof.signatureDriveId)}"`)}</div>`:''}<div class="info-box" style="margin-top:16px">${d.nps?.score!==undefined?`⭐ <strong>Nota do cliente: ${d.nps.score}/10</strong><p>${e(d.nps.comment||'Sem comentário')}</p>`:`⭐ <strong>Avaliação ainda não recebida</strong><p>Envie a pesquisa NPS pelo painel.</p>`}</div>`:''}`;
+function detail(d){if(!d)return;const proof=d.proof||{},photoFiles=proof.photos||[],driver=S.role==='driver';let photoText='Nenhuma foto anexada';if(photoFiles.length)photoText=`<div class="photo-grid">${photoFiles.map((p,i)=>p.dataUrl?`<img loading="lazy" src="${p.dataUrl}" alt="Foto ${i+1}">`:`<button type="button" class="btn btn-soft btn-sm" data-action="file-open" data-drive-id="${e(p.driveFileId||'')}">📷 Foto ${i+1}</button>`).join('')}</div>`;const p=`<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:18px"><div><div class="row-code">${e(d.code)} · ${e(d.orderNumber||'Sem OP')}</div><h3 style="font-size:21px;margin:4px 0">${e(d.customerName)}</h3></div>${badge(d.status)}</div><div class="detail-grid"><div class="detail-cell"><small>Endereço</small><strong>${e(d.address)}, ${e(d.city)}</strong></div><div class="detail-cell"><small>Motorista</small><strong>${e(d.driverName)}</strong></div><div class="detail-cell"><small>Telefone</small><strong>${e(d.customerPhone)}</strong></div><div class="detail-cell"><small>Ordem de produção</small><strong>${e(d.orderNumber||'—')}</strong></div><div class="detail-cell"><small>Início da entrega</small><strong>${formatDate(d.startedAt)}</strong></div><div class="detail-cell"><small>Finalização</small><strong>${formatDate(d.deliveredAt)}</strong></div></div>${d.reference||d.notes?`<div class="callout warn" style="margin-top:13px">${d.reference?`<strong>Referência:</strong> ${e(d.reference)}<br>`:''}${d.notes?`<strong>Observações:</strong> ${e(d.notes)}`:''}</div>`:''}<section class="order-detail-card"><div class="order-detail-title"><h3>📋 Itens e informações da ordem de produção</h3><span class="small-tag">${d.orderTextAvailable?'Leitura importada':'Aguardando leitura'}</span></div><p class="field-note">Conteúdo do pedido disponível apenas para o administrativo e o motorista designado.</p><div id="order-content"><span class="op-progress">Carregando todas as páginas...</span></div></section><div class="mini-actions">${(d.orderFile?.driveUrl||d.orderFile?.dataUrl||d.orderFile?.driveFileId)?btn('file-open','📄 Abrir ordem de produção','btn-outline btn-sm',`data-drive-id="${e(d.orderFile.driveFileId||'')}" data-url="${e(d.orderFile.driveUrl||d.orderFile.dataUrl||'')}"`):'<span class="sub" style="font-size:12px">Nenhum arquivo OP anexado</span>'}${btn('navigate','🧭 Abrir no Maps','btn-outline btn-sm',`data-id="${e(d.id)}"`)}${d.status!=='pendente'?btn('copy-track','🔗 Copiar rastreamento','btn-outline btn-sm',`data-id="${e(d.id)}"`):''}</div>${d.status==='em_rota'?`<h3 style="margin:22px 0 3px">📍 Rota ao vivo</h3><div class="map-box" id="detail-map"></div><div id="detail-map-info" class="gps-meta gps-wait" aria-live="polite">Aguardando posição GPS...</div><div class="mini-actions">${btn('center-map','🎯 Centralizar no motorista','btn-outline btn-sm','data-map="detail-map"')}</div>`:''}${d.status==='entregue'?`<h3 style="margin:23px 0 11px">Comprovante de entrega</h3><div class="detail-grid"><div class="detail-cell"><small>Recebido por</small><strong>${e(proof.recipientName||'—')}</strong></div><div class="detail-cell"><small>CPF do recebedor</small><strong>${maskCPF(proof.cpf)}</strong></div></div><div style="margin-top:13px"><strong style="font-size:12px">Fotos da entrega</strong>${photoText}</div>${proof.signatureDataUrl?`<h4 style="margin:20px 0 7px">Assinatura</h4><img class="sign-photo" src="${proof.signatureDataUrl}" alt="Assinatura">`:proof.signatureDriveId?`<div class="mini-actions">${btn('file-open','✍ Visualizar assinatura','btn-outline btn-sm',`data-drive-id="${e(proof.signatureDriveId)}"`)}</div>`:''}<div class="info-box" style="margin-top:16px">${d.nps?.score!==undefined?`⭐ <strong>Nota do cliente: ${d.nps.score}/10</strong><p>${e(d.nps.comment||'Sem comentário')}</p>`:`⭐ <strong>Avaliação ainda não recebida</strong><p>Envie a pesquisa NPS pelo painel.</p>`}</div>`:''}`;
 let actions=btn('close-modal','Fechar');if(driver&&d.status==='pendente')actions+=btn('start','▶ Iniciar entrega','btn-green',`data-id="${e(d.id)}"`);if(driver&&d.status==='em_rota')actions+=btn('finish-open','✓ Registrar entrega','btn-green',`data-id="${e(d.id)}"`);if(S.role==='admin'&&d.status==='entregue'){actions+=btn('nps-send','⭐ Preparar mensagem NPS','btn-green',`data-id="${e(d.id)}"`);}if(d.status==='em_rota'&&S.role==='admin')actions+=btn('wa-start','✉ Preparar aviso','btn-outline',`data-id="${e(d.id)}"`);
-modal('Detalhes da entrega',p,actions);S.modal.dataset.deliveryId=d.id;if(d.status==='em_rota')setTimeout(()=>showMap('detail-map',d),50);}
+modal('Detalhes da entrega',p,actions);S.modal.dataset.deliveryId=d.id;void populateOrderCard(d);if(d.status==='em_rota')setTimeout(()=>showMap('detail-map',d),50);}
 function openFinish(d){if(d.status!=='em_rota')return toast('Esta entrega não está em rota.');S.photos=[];S.signed=false;modal('Comprovante de entrega',`<div class="callout" style="margin-bottom:18px">📋 ${e(d.code)} · ${e(d.customerName)}<br>Registre o recebimento antes de finalizar a entrega.</div><form id="finishForm" data-id="${e(d.id)}"><div class="fields"><div class="field"><label>Nome de quem recebeu *</label><input name="recipientName" required maxlength="100" placeholder="Nome completo"></div><div class="field"><label>CPF de quem recebeu *</label><input name="cpf" required inputmode="numeric" maxlength="14" placeholder="000.000.000-00"></div><div class="field full"><label>Fotos da entrega (1 a 4) *</label><input id="proofFiles" type="file" accept="image/*" capture="environment" multiple><div class="field-note">Faça fotos dos produtos entregues. Máximo de 4 fotos.</div><div id="photoPreview" class="photo-grid"></div></div><div class="field full"><label>Assinatura digital do recebedor *</label><div class="sign-box"><canvas id="signatureCanvas" aria-label="Área para assinar com o dedo"></canvas></div><div class="mini-actions">${btn('clear-signature','↺ Limpar assinatura','btn-outline btn-sm')}</div></div><div class="field full"><label style="display:flex;gap:9px;align-items:flex-start"><input type="checkbox" name="consent" required style="width:18px;height:18px;flex-shrink:0;margin:2px 0"> Confirmo que o recebedor foi informado sobre a coleta de CPF, assinatura e fotos exclusivamente para comprovação da entrega.</label></div></div></form>`,btn('close-modal','Cancelar')+`<button form="finishForm" type="submit" class="btn btn-green">✓ Finalizar entrega</button>`);initSignature();}
 function initSignature(){const canvas=$('#signatureCanvas');if(!canvas)return;canvas.width=900;canvas.height=300;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#14223d';ctx.lineWidth=3.7;ctx.lineJoin='round';ctx.lineCap='round';let isDown=false;const coords=ev=>{const r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)*canvas.width/r.width,y:(ev.clientY-r.top)*canvas.height/r.height};};canvas.onpointerdown=ev=>{isDown=true;canvas.setPointerCapture(ev.pointerId);const p=coords(ev);ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+.05,p.y+.05);ctx.stroke();S.signed=true;};canvas.onpointermove=ev=>{if(!isDown)return;const p=coords(ev);ctx.lineTo(p.x,p.y);ctx.stroke();};canvas.onpointerup=canvas.onpointercancel=()=>isDown=false;}
 async function imageData(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const max=1000,ratio=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext('2d').drawImage(img,0,0,c.width,c.height);const data=c.toDataURL('image/jpeg',.66);URL.revokeObjectURL(url);resolve(data);};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Não foi possível ler a foto.'));};img.src=url;});}
 function setupPhotoPreview(files){if(files.length>4)return toast('Selecione até 4 fotos.');Promise.all(files.map(imageData)).then(arr=>{S.photos=arr;const root=$('#photoPreview');if(root)root.innerHTML=arr.map(x=>`<img alt="Foto selecionada" src="${x}">`).join('');}).catch(problem);}
 
-async function createDelivery(form){const data=new FormData(form),customerPhone=String(data.get('customerPhone')||'').trim();if(!validPhone(customerPhone))throw Error('Informe um número de WhatsApp válido com DDD.');const driver=S.drivers.find(x=>x.uid===data.get('driverId'));if(!driver)throw Error('Selecione um motorista cadastrado.');const file=data.get('orderFile');if(file?.size>5*1024*1024)throw Error('A ordem de produção deve ter até 5 MB para envio ao Drive.');if(file?.size&&!['application/pdf'].includes(file.type)&&!file.type.startsWith('image/'))throw Error('Envie um PDF ou imagem da ordem de produção.');
- const record={id:id(),code:`ENT-${Date.now().toString().slice(-7)}`,customerName:String(data.get('customerName')).trim(),customerPhone,address:String(data.get('address')).trim(),city:String(data.get('city')).trim(),orderNumber:String(data.get('orderNumber')).trim(),driverId:driver.uid,driverName:driver.name,reference:String(data.get('reference')).trim(),notes:String(data.get('notes')).trim(),createdAt:stamp(),status:'pendente',whatsappOptIn:data.get('whatsappOptIn')==='on',trackingToken:token(),npsToken:token(),routePoints:[],orderFile:null};
- if(configured){if(file?.size){const uploaded=await uploadDrive(record.id,'order',file.name,file.type||'application/pdf',await fileAsDataUrl(file));record.orderFile={driveFileId:uploaded.fileId,name:uploaded.name};}const batch=F.writeBatch(db);batch.set(F.doc(db,'deliveries',record.id),Object.fromEntries(Object.entries(record).filter(([k])=>k!=='id')));batch.set(F.doc(db,'tracking',record.trackingToken),{deliveryId:record.id,code:record.code,status:'pendente',routePoints:[],createdAt:record.createdAt});await batch.commit();}
- else{if(file?.size){record.orderFile={name:file.name};if(file.size<=600*1024)record.orderFile.dataUrl=await fileAsDataUrl(file);}S.deliveries.unshift(record);writeDemo();}closeModal();render();toast('Entrega cadastrada e atribuída ao motorista.');}
+async function createDelivery(form){
+ if(S.role!=='admin')throw Error('Somente o administrador pode cadastrar ordens de entrega.');
+ const data=new FormData(form),customerPhone=String(data.get('customerPhone')||'').trim();
+ if(!validPhone(customerPhone))throw Error('Informe um número de WhatsApp válido com DDD.');
+ const driver=S.drivers.find(x=>x.uid===data.get('driverId'));
+ if(!driver)throw Error('Selecione um motorista cadastrado.');
+ const file=data.get('orderFile');
+ if(file?.size>5*1024*1024)throw Error('A ordem de produção deve ter até 5 MB para leitura.');
+ if(file?.size&&file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)&&!file.type.startsWith('image/'))throw Error('Envie PDF ou imagem da ordem de produção.');
+ const driveUrl=normalizeDriveUrl(data.get('orderDriveUrl'));
+ if(S.opLoad)await S.opLoad;
+ let parsed=S.opDraft;
+ if(file?.size && (!parsed||parsed.fileName!==file.name||parsed.fileSize!==file.size||parsed.fileModified!==file.lastModified) && !String(data.get('orderManualText')||'').trim()){
+  parsed=await extractOpFile(file);
+ }
+ const manuallyEdited=String(data.get('orderManualText')||'').trim();
+ const extracted=(parsed?.pages||[]).map(x=>x.text).join('\n').trim();
+ let pages=parsed?.pages||[];
+ if(manuallyEdited && manuallyEdited!==extracted)pages=plainPages(manuallyEdited);
+ if(!pages.length && file?.size && !driveUrl && !manuallyEdited)throw Error('Esta OP não pôde ser lida. Transcreva o conteúdo ou informe o link do original no Google Drive.');
+ if(pages.length>450)throw Error('OP muito longa para salvar. Divida o pedido em documentos menores.');
+ const totalText=pages.reduce((n,p)=>n+p.text.length,0);
+ if(totalText>3_000_000)throw Error('O texto do pedido ultrapassa o limite de 3 milhões de caracteres.');
+ const record={id:id(),code:`ENT-${Date.now().toString().slice(-7)}`,customerName:String(data.get('customerName')).trim(),customerPhone,address:String(data.get('address')).trim(),city:String(data.get('city')).trim(),orderNumber:String(data.get('orderNumber')).trim(),driverId:driver.uid,driverName:driver.name,reference:String(data.get('reference')).trim(),notes:String(data.get('notes')).trim(),createdAt:stamp(),status:'pendente',whatsappOptIn:data.get('whatsappOptIn')==='on',trackingToken:token(),npsToken:token(),routePoints:[],orderFile:(file?.size||driveUrl)?{name:file?.size?file.name:'Ordem de produção no Google Drive',...(driveUrl?{driveUrl}:{} )}:null,orderTextAvailable:pages.length>0,orderPageCount:new Set(pages.map(x=>x.page)).size,orderTextLength:totalText};
+ if(configured){
+  const batch=F.writeBatch(db);
+  batch.set(F.doc(db,'deliveries',record.id),Object.fromEntries(Object.entries(record).filter(([k])=>k!=='id')));
+  batch.set(F.doc(db,'tracking',record.trackingToken),{deliveryId:record.id,code:record.code,status:'pendente',routePoints:[],createdAt:record.createdAt});
+  pages.forEach((chunk,i)=>batch.set(F.doc(db,'deliveries',record.id,'orderPages',String(i+1).padStart(4,'0')),{page:chunk.page,part:chunk.part||1,text:chunk.text,createdAt:record.createdAt}));
+  await batch.commit();
+ }else{
+  record.orderPages=pages;
+  // No modo demonstração, o arquivo binário não é persistido nem enviado ao Drive.
+  S.deliveries.unshift(record);writeDemo();
+ }
+ closeModal();render();toast(pages.length?'Entrega cadastrada com todos os dados lidos da OP.':'Entrega cadastrada. A OP não possui texto extraído.');
+}
 function fileAsDataUrl(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});}
 // Cadastro pelo painel sem Cloud Functions. Um Auth secundário em memória
 // cria o motorista sem substituir a sessão de quem está administrando.
@@ -313,14 +520,87 @@ async function setDriverAccess(uid,active){
  toast(active?'Acesso do motorista liberado.':'Acesso do motorista desativado.');render();
 }
 async function updateDelivery(d,patch,trackingPatch=null,npsCreate=null){if(configured){const batch=F.writeBatch(db);batch.update(F.doc(db,'deliveries',d.id),patch);if(trackingPatch)batch.set(F.doc(db,'tracking',d.trackingToken),trackingPatch,{merge:true});if(npsCreate)batch.set(F.doc(db,'nps',d.npsToken),npsCreate);await batch.commit();}else{Object.assign(d,patch);writeDemo();} }
-async function start(d){if(S.role!=='driver')throw Error('Somente o motorista responsável pode iniciar a entrega.');if(!own(d))throw Error('Entrega não atribuída a este usuário.');if(d.status!=='pendente')throw Error('A entrega já foi iniciada.');const now=stamp();await updateDelivery(d,{status:'em_rota',startedAt:now},{status:'em_rota',startedAt:now});closeModal();render();if(S.role==='driver')startGps(d.id);messageModal(d,'start');}
+async function start(d){
+ if(S.role!=='driver'||!own(d))throw Error('Somente o motorista responsável pode iniciar a entrega.');
+ if(d.status!=='pendente')throw Error('A entrega já foi iniciada.');
+ const now=stamp();await updateDelivery(d,{status:'em_rota',startedAt:now},{status:'em_rota',startedAt:now});
+ // Evita a corrida: o primeiro ponto GPS pode chegar antes do snapshot do Firestore.
+ d.status='em_rota';d.startedAt=now;
+ closeModal();render();startGps(d.id);messageModal(d,'start');
+}
 function distanceMeters(a,b){const rad=Math.PI/180,lat=(b.lat-a.lat)*rad,lon=(b.lng-a.lng)*rad,x=Math.sin(lat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(lon/2)**2;return 2*6371000*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
-function stopGps(){if(S.watch!==null){navigator.geolocation.clearWatch(S.watch);S.watch=null;}}
-function startGps(deliveryId){if(!navigator.geolocation){toast('GPS não disponível neste aparelho.');return;}stopGps();S.gpsLast=0;S.gpsPoint=null;S.gpsPaused=false;S.watch=navigator.geolocation.watchPosition(p=>{const point={lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),ts:Date.now(),accuracy:Math.round(p.coords.accuracy)};if(point.accuracy>250){return;}if(Date.now()-S.gpsLast<9000)return;if(S.gpsPoint && distanceMeters(point,S.gpsPoint)<15 && Date.now()-S.gpsLast<45000)return;void recordGps(deliveryId,point);},err=>toast('GPS: '+(err.code===1?'Permissão negada':err.message)),{enableHighAccuracy:true,maximumAge:3000,timeout:20000});toast('Localização ativa. Mantenha o app aberto durante a viagem.');}
-async function recordGps(deliveryId,point){if(S.gpsBusy)return;const d=findDelivery(deliveryId);if(!d||d.status!=='em_rota'){stopGps();return;}S.gpsBusy=true;try{const route=[...(d.routePoints||[]),{lat:point.lat,lng:point.lng,ts:point.ts}].slice(-250),lastLocation={lat:point.lat,lng:point.lng,accuracy:point.accuracy,ts:point.ts};await updateDelivery(d,{lastLocation,routePoints:route},{lastLocation,routePoints:route,status:'em_rota'});S.gpsLast=Date.now();S.gpsPoint=point;}catch(err){console.error('GPS',err);}finally{S.gpsBusy=false;}}
+function gpsSaveKey(){return `rotacerta_gps_${S.user?.uid||'desconhecido'}`;}
+function stopGps(forget=false){
+ if(S.watch!==null && navigator.geolocation){navigator.geolocation.clearWatch(S.watch);}
+ S.watch=null;S.gpsDeliveryId=null;S.gpsBusy=false;
+ if(forget){try{localStorage.removeItem(gpsSaveKey());}catch{}}
+}
+function gpsError(err){
+ const msg=err.code===1?'Permissão de localização negada. Libere o GPS para este site nas configurações do celular.':err.code===2?'Sem sinal GPS. Verifique a localização do celular.':'Tempo esgotado ao buscar GPS. Verifique a conexão.';
+ if(err.code===1){stopGps(true);S.gpsPaused=true;}
+ if(Date.now()-S.gpsErrorAt>15000){toast(msg);S.gpsErrorAt=Date.now();}
+ S.gpsError=msg;
+}
+function gpsPosition(deliveryId,p){
+ if(S.gpsDeliveryId!==deliveryId)return;
+ const point={lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),ts:Date.now(),accuracy:Math.round(p.coords.accuracy)};
+ if(!validPosition(point)||!Number.isFinite(point.accuracy))return;
+ if(point.accuracy>250){if(Date.now()-S.gpsErrorAt>20000){toast('GPS com baixa precisão. Aguardando sinal melhor.');S.gpsErrorAt=Date.now();}return;}
+ if(S.gpsBusy||Date.now()-S.gpsLast<9000)return;
+ if(S.gpsPoint&&distanceMeters(point,S.gpsPoint)<15&&Date.now()-S.gpsLast<45000)return;
+ void recordGps(deliveryId,point);
+}
+function startGps(deliveryId){
+ if(!navigator.geolocation){toast('GPS não disponível neste aparelho.');return;}
+ if(!window.isSecureContext && location.protocol!=='file:'){toast('GPS exige um site HTTPS.');return;}
+ const d=findDelivery(deliveryId);
+ if(!d || d.status!=='em_rota' || S.role!=='driver' || d.driverId!==S.user?.uid){toast('Não há entrega ativa atribuída a você.');return;}
+ if(S.watch!==null&&S.gpsDeliveryId===deliveryId)return;
+ stopGps();S.gpsLast=0;S.gpsPoint=null;S.gpsRoute=[...(d.routePoints||[])];S.gpsPaused=false;S.gpsDeliveryId=deliveryId;S.gpsError=null;
+ try{localStorage.setItem(gpsSaveKey(),deliveryId);}catch{}
+ S.watch=navigator.geolocation.watchPosition(p=>gpsPosition(deliveryId,p),gpsError,{enableHighAccuracy:true,maximumAge:2000,timeout:25000});
+ // Obtém imediatamente a primeira posição e acelera a aparição do marcador.
+ navigator.geolocation.getCurrentPosition(p=>gpsPosition(deliveryId,p),()=>{},{enableHighAccuracy:true,maximumAge:2000,timeout:15000});
+ toast('Buscando sinal GPS. Mantenha o app aberto durante a viagem.');render();
+}
+async function resumeGpsIfAllowed(){
+ if(S.gpsResumeChecked||S.role!=='driver'||S.watch!==null)return;
+ const active=S.deliveries.find(d=>d.driverId===S.user?.uid&&d.status==='em_rota');
+ if(!active)return;
+ let saved;try{saved=localStorage.getItem(gpsSaveKey());}catch{}
+ if(saved!==active.id)return;
+ S.gpsResumeChecked=true;
+ // Reativação só ocorre com permissão já concedida, sem abrir novo prompt.
+ try{if(navigator.permissions?.query){const result=await navigator.permissions.query({name:'geolocation'});if(result.state==='granted'&&S.watch===null)startGps(active.id);}}
+ catch{/* Safari pode não suportar Permissions API; use o botão Ativar GPS. */}
+}
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='visible' && S.watch!==null&&S.gpsDeliveryId&&navigator.geolocation){
+   const deliveryId=S.gpsDeliveryId;
+   navigator.geolocation.getCurrentPosition(p=>gpsPosition(deliveryId,p),()=>{},{enableHighAccuracy:true,maximumAge:1500,timeout:16000});
+ }
+});
+async function recordGps(deliveryId,point){
+ if(S.gpsBusy)return;
+ const d=findDelivery(deliveryId);
+ if(!d||d.status!=='em_rota'||(configured&&d.driverId!==S.user?.uid)){
+   if(d?.status==='entregue')stopGps(true);
+   return;
+ }
+ S.gpsBusy=true;
+ try{
+   const route=[...S.gpsRoute,{lat:point.lat,lng:point.lng,ts:point.ts}].slice(-250);
+   const lastLocation={lat:point.lat,lng:point.lng,accuracy:point.accuracy,ts:point.ts};
+   await updateDelivery(d,{lastLocation,routePoints:route},{lastLocation,routePoints:route,status:'em_rota'});
+   S.gpsLast=Date.now();S.gpsPoint=point;S.gpsRoute=route;
+   d.lastLocation=lastLocation;d.routePoints=route;
+   if(!configured)render();
+ }catch(err){console.error('Falha ao atualizar GPS:',err);if(Date.now()-S.gpsErrorAt>14000){toast('GPS capturado, mas não foi salvo no Firebase. Confira as regras do Firestore e a internet.');S.gpsErrorAt=Date.now();}}
+ finally{S.gpsBusy=false;}
+}
 async function finishDelivery(form){const d=findDelivery(form.dataset.id);if(!d||!own(d)||d.status!=='em_rota')throw Error('A entrega não está disponível para finalização.');const fd=new FormData(form),name=String(fd.get('recipientName')||'').trim(),cpf=String(fd.get('cpf')||'').replace(/\D/g,'');if(name.length<3)throw Error('Informe o nome completo do recebedor.');if(!cpfValid(cpf))throw Error('CPF inválido. Confira os números digitados.');if(!S.photos.length)throw Error('Adicione ao menos uma foto da entrega.');if(!S.signed)throw Error('Colete a assinatura do recebedor.');if(!fd.get('consent'))throw Error('Confirme a ciência do recebedor sobre a coleta dos dados.');const signature=$('#signatureCanvas').toDataURL('image/png');const photos=[],proof={recipientName:name,cpf,photos,completedAt:stamp()};
  if(configured){for(let i=0;i<S.photos.length;i++){const uploaded=await uploadDrive(d.id,'photo',`foto-entrega-${i+1}.jpg`,'image/jpeg',S.photos[i]);photos.push({driveFileId:uploaded.fileId,name:uploaded.name});}const uploaded=await uploadDrive(d.id,'signature','assinatura.png','image/png',signature);proof.signatureDriveId=uploaded.fileId;}else{S.photos.forEach((url,i)=>photos.push({dataUrl:url,name:`Foto ${i+1}`}));proof.signatureDataUrl=signature;}
- const closed=stamp();await updateDelivery(d,{status:'entregue',deliveredAt:closed,proof},{status:'entregue',deliveredAt:closed,lastLocation:F?.deleteField?F.deleteField():null,routePoints:[]},{deliveryId:d.id,code:d.code,createdAt:closed});stopGps();closeModal();render();toast('Entrega finalizada e comprovante salvo. O administrativo poderá enviar o NPS.');}
+ const closed=stamp();await updateDelivery(d,{status:'entregue',deliveredAt:closed,proof},{status:'entregue',deliveredAt:closed,lastLocation:F?.deleteField?F.deleteField():null,routePoints:[]},{deliveryId:d.id,code:d.code,createdAt:closed});stopGps(true);closeModal();render();toast('Entrega finalizada e comprovante salvo. O administrativo poderá enviar o NPS.');}
 function openWhatsapp(d,kind){messageModal(d,kind);}
 async function uploadDrive(deliveryId,kind,name,mimeType,dataUrl){
  if(!configured)throw Error('A conexão com o Drive exige Firebase.');
@@ -354,7 +634,21 @@ function navigate(d){const q=[d.address,d.city].filter(Boolean).join(', ');windo
 async function copy(value,label='Link copiado.'){try{await navigator.clipboard.writeText(value);toast(label);}catch{prompt('Copie o texto abaixo:',value);}}
 function publicBase(title){return `<div class="public-shell"><header class="public-top"><div class="logo" style="margin:0;max-width:800px;margin-inline:auto"><span class="brand-mark">↗</span><span>RotaCerta<small>${title}</small></span></div></header><main class="public-content" id="publicMain"></main></div>`;}
 function publicError(text){app.innerHTML=publicBase('ACOMPANHAMENTO');$('#publicMain').innerHTML=`<div class="public-card error-page"><div style="font-size:50px">📦</div><h2>Não foi possível carregar</h2><p>${e(text)}</p></div>`;}
-function renderTracking(doc){S.currentTracking=doc;app.innerHTML=publicBase('RASTREAMENTO');const status=doc.status||'pendente';$('#publicMain').innerHTML=`<div class="public-card"><span class="eyebrow">ACOMPANHAMENTO DE ENTREGA</span><h1>Seu pedido está ${status==='em_rota'?'a caminho!':status==='entregue'?'entregue!':'sendo preparado.'}</h1><p class="sub" style="margin-bottom:16px">Pedido <strong>${e(doc.code||'—')}</strong> · Acompanhe o andamento abaixo.</p><div class="timeline"><div class="complete"></div><div class="${status!=='pendente'?'complete':''}"></div><div class="${status==='entregue'?'complete':''}"></div></div><div class="detail-grid"><div class="detail-cell"><small>Status atual</small><strong>${statusLabel(status)}</strong></div><div class="detail-cell"><small>Início da viagem</small><strong>${formatDate(doc.startedAt)}</strong></div></div>${status==='em_rota'?`<h3 style="margin:23px 0 12px">📍 Localização do motorista</h3><div id="public-map" class="map-box" style="height:350px"></div><p class="field-note">Localização atualizada quando o motorista estiver com o aplicativo aberto e o GPS disponível. A linha mostra o percurso registrado, não uma previsão de rota.</p>`:status==='entregue'?'<div class="callout" style="margin-top:19px">✓ Entrega concluída. A localização deixou de ser compartilhada.</div>':'<div class="callout warn" style="margin-top:19px">O rastreamento ficará disponível após o início da entrega.</div>'}</div><p class="sub" style="text-align:center;font-size:11px">Apenas a posição do motorista e o status do pedido são exibidos neste link.</p>`;if(status==='em_rota')setTimeout(()=>showMap('public-map',doc),50);}
+function renderTracking(doc){
+ const previous=S.currentTracking;
+ S.currentTracking=doc;
+ const status=doc.status||'pendente';
+ const existing=$('#publicMain');
+ // O layout é criado apenas ao mudar o status. Snapshots de GPS atualizam
+ // o marcador e a linha no mesmo mapa, evitando piscadas e perda de zoom.
+ if(!existing || existing.dataset.status!==status){
+   clearMap('public-map');
+   app.innerHTML=publicBase('RASTREAMENTO');
+   $('#publicMain').dataset.status=status;
+   $('#publicMain').innerHTML=`<div class="public-card"><span class="eyebrow">ACOMPANHAMENTO DE ENTREGA</span><h1>Seu pedido está ${status==='em_rota'?'a caminho!':status==='entregue'?'entregue!':'sendo preparado.'}</h1><p class="sub" style="margin-bottom:16px">Pedido <strong>${e(doc.code||'—')}</strong> · Acompanhe o andamento abaixo.</p><div class="timeline"><div class="complete"></div><div class="${status!=='pendente'?'complete':''}"></div><div class="${status==='entregue'?'complete':''}"></div></div><div class="detail-grid"><div class="detail-cell"><small>Status atual</small><strong>${statusLabel(status)}</strong></div><div class="detail-cell"><small>Início da viagem</small><strong>${formatDate(doc.startedAt)}</strong></div></div>${status==='em_rota'?`<h3 style="margin:23px 0 12px">📍 Localização do motorista</h3><div id="public-map" class="map-box" style="height:350px"></div><p id="public-map-info" class="gps-meta gps-wait" aria-live="polite">Aguardando sinal GPS...</p><div class="mini-actions">${btn('center-map','🎯 Centralizar no motorista','btn-outline btn-sm','data-map="public-map"')}</div><p class="field-note" style="margin-top:10px">A linha representa o percurso GPS registrado, não a rota prevista. Atualizações dependem do aplicativo do motorista aberto, internet e GPS habilitado.</p>`:status==='entregue'?'<div class="callout" style="margin-top:19px">✓ Entrega concluída. A localização deixou de ser compartilhada.</div>':'<div class="callout warn" style="margin-top:19px">O rastreamento ficará disponível após o início da entrega.</div>'}</div><p class="sub" style="text-align:center;font-size:11px">Este link mostra somente a posição do motorista e o status da entrega.</p>`;
+ }
+ if(status==='em_rota')showMap('public-map',doc);
+}
 function renderTrackingDemo(){const key=new URLSearchParams(location.search).get('track'),d=S.deliveries.find(x=>x.trackingToken===key);if(!d)return publicError('Link de rastreamento não encontrado. No modo demo, ele só funciona neste navegador.');renderTracking({code:d.code,status:d.status,startedAt:d.startedAt,deliveredAt:d.deliveredAt,lastLocation:d.status==='entregue'?null:d.lastLocation,routePoints:d.status==='entregue'?[]:d.routePoints});}
 function cloudTracking(key){app.innerHTML=publicBase('RASTREAMENTO');$('#publicMain').innerHTML='<div class="public-card">Carregando rastreamento...</div>';setUnsub(F.onSnapshot(F.doc(db,'tracking',key),snap=>{if(!snap.exists())return publicError('Link de rastreamento não encontrado.');renderTracking(snap.data());},problem));}
 function renderNps(npsDoc,delivery){app.innerHTML=publicBase('AVALIAÇÃO DA ENTREGA');let target=$('#publicMain');if(npsDoc.submittedAt||delivery?.nps?.score!==undefined){target.innerHTML=`<div class="public-card" style="text-align:center;padding:50px 23px"><div style="font-size:60px">💚</div><h1>Obrigado pela avaliação!</h1><p class="sub">Sua opinião nos ajuda a melhorar cada entrega.</p></div>`;return;}target.innerHTML=`<div class="public-card"><span class="eyebrow">PESQUISA DE SATISFAÇÃO</span><h1>Como foi sua entrega?</h1><p class="sub">Seu pedido <strong>${e(npsDoc.code||delivery?.code||'')}</strong> já foi entregue. Queremos saber como foi a experiência de recebimento.</p><form id="npsForm"><div style="font-weight:800;font-size:14px;margin-top:28px">De 0 a 10, qual nota você daria para a entrega?</div><div class="score-grid">${Array.from({length:11},(_,i)=>`<button type="button" class="score-btn" data-action="score" data-score="${i}">${i}</button>`).join('')}</div><div class="nps-scale"><span>😕 Muito ruim</span><span>😍 Excelente</span></div><div class="field"><label>Deixe um comentário (opcional)</label><textarea name="comment" maxlength="500" placeholder="O que podemos melhorar?"></textarea></div><button class="btn btn-green btn-block" style="margin-top:23px" type="submit">Enviar minha avaliação →</button></form></div><p class="sub" style="text-align:center;font-size:12px">Pesquisa referente exclusivamente à experiência de entrega.</p>`;S.rating=null;}
@@ -376,7 +670,7 @@ document.addEventListener('click',async ev=>{
 
  case 'login-driver':enterDemo('driver');break;
  case 'view':S.view=el.dataset.view;render();break;
- case 'logout':stopGps();clearUnsubs();closeModal();if(configured)await F.signOut(auth);else{S.user=null;S.role=null;renderLogin();}break;
+ case 'logout':stopGps(true);clearUnsubs();closeModal();if(configured)await F.signOut(auth);else{S.user=null;S.role=null;renderLogin();}break;
  case 'new-delivery':deliveryForm();break;
  case 'new-driver':newDriverForm();break;
  case 'driver-access':await setDriverAccess(el.dataset.uid,el.dataset.enabled==='true');break;
@@ -397,6 +691,7 @@ document.addEventListener('click',async ev=>{
  case 'score':S.rating=Number(el.dataset.score);document.querySelectorAll('.score-btn').forEach(b=>b.classList.toggle('selected',Number(b.dataset.score)===S.rating));break;
  case 'simulate':await simulateStep(d);break;
  case 'activate-gps':startGps(d.id);break;
+ case 'center-map':centerMap(el.dataset.map);break;
  }
  }catch(err){problem(err);}
 });
@@ -412,7 +707,7 @@ document.addEventListener('submit',async ev=>{
  if(form.id==='npsForm')await submitNps(form);
  }catch(err){problem(err);}finally{if(submit?.isConnected)submit.disabled=false;}
 });
-document.addEventListener('change',ev=>{if(ev.target.id==='filterStatus'){S.filter=ev.target.value;$('#deliveryResults').innerHTML=rows(filtered());}if(ev.target.id==='proofFiles')setupPhotoPreview(Array.from(ev.target.files||[]));});
+document.addEventListener('change',ev=>{if(ev.target.id==='filterStatus'){S.filter=ev.target.value;$('#deliveryResults').innerHTML=rows(filtered());}if(ev.target.id==='proofFiles')setupPhotoPreview(Array.from(ev.target.files||[]));if(ev.target.name==='orderFile'){S.opLoad=previewOpFile(ev.target.files?.[0]);}});
 document.addEventListener('input',ev=>{if(ev.target.id==='searchDeliveries'){S.term=ev.target.value;$('#deliveryResults').innerHTML=rows(filtered());}if(ev.target.name==='cpf'){const x=ev.target.value.replace(/\D/g,'').slice(0,11);ev.target.value=x.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/(\d{3})(\d{2})$/,'$1-$2');}});
 boot();
 
