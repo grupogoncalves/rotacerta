@@ -13,7 +13,9 @@ service cloud.firestore {
       allow list: if admin();
       // Cadastro feito no aplicativo: SOMENTE o próprio usuário pode criar
       // perfil de motorista INATIVO. O navegador nunca pode aprovar ou se promover.
-      allow create: if signedIn() && request.auth.uid == uid &&
+      allow create: if (
+        // Solicitação pelo próprio motorista: sempre inativa.
+        signedIn() && request.auth.uid == uid &&
         request.auth.token.email is string &&
         request.resource.data.keys().hasOnly(['name','email','role','active','createdAt']) &&
         request.resource.data.keys().hasAll(['name','email','role','active','createdAt']) &&
@@ -22,8 +24,49 @@ service cloud.firestore {
         request.resource.data.email == request.auth.token.email.lower() &&
         request.resource.data.role == 'driver' &&
         request.resource.data.active == false &&
-        request.resource.data.createdAt == request.time;
-      allow update, delete: if false;
+        request.resource.data.createdAt == request.time
+      ) || (
+        // Conta nova criada pelo painel administrativo usando Auth secundário.
+        admin() && request.auth.uid != uid &&
+        request.resource.data.keys().hasOnly([
+          'name','email','phone','role','active','createdAt','createdBy','approvedBy','approvedAt'
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'name','email','phone','role','active','createdAt','createdBy'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 3 && request.resource.data.name.size() <= 100 &&
+        request.resource.data.email is string &&
+        request.resource.data.email.size() >= 5 && request.resource.data.email.size() <= 254 &&
+        request.resource.data.phone is string && request.resource.data.phone.size() <= 15 &&
+        request.resource.data.role == 'driver' &&
+        request.resource.data.active is bool &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        (
+          (request.resource.data.active == false &&
+            !request.resource.data.keys().hasAny(['approvedBy','approvedAt'])) ||
+          (request.resource.data.active == true &&
+            request.resource.data.approvedBy == request.auth.uid &&
+            request.resource.data.approvedAt == request.time)
+        )
+      );
+      // Somente o administrador altera o status (jamais o role ou a identidade).
+      allow update: if admin() && request.auth.uid != uid &&
+        resource.data.role == 'driver' &&
+        request.resource.data.role == 'driver' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'active','approvedBy','approvedAt','accessUpdatedBy','accessUpdatedAt'
+        ]) &&
+        request.resource.data.active is bool &&
+        request.resource.data.accessUpdatedBy == request.auth.uid &&
+        request.resource.data.accessUpdatedAt == request.time &&
+        (
+          request.resource.data.active == false ||
+          (request.resource.data.approvedBy == request.auth.uid &&
+           request.resource.data.approvedAt == request.time)
+        );
+      allow delete: if false;
     }
     match /deliveries/{deliveryId} {
       allow get, list: if admin() || assigned(resource.data);

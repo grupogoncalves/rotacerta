@@ -8,3 +8,25 @@
 
 /* Prévia de WhatsApp: campos legíveis e botões adaptados ao mobile */
 .message-preview-intro{background:#f0f9f5;border:1px solid #d2eee2;border-radius:13px;padding:15px;margin-bottom:18px}.message-preview-intro strong{display:block;font-size:14px}.message-preview-intro p{font-size:13px;color:#4f6c62;margin:7px 0 0}.message-preview-text{width:100%;min-height:230px;resize:vertical;white-space:pre-wrap;line-height:1.55;font-size:14px}.copy-input{display:flex;align-items:stretch;gap:8px}.copy-input input{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.copy-input button{flex-shrink:0}@media(max-width:600px){.modal-footer{display:flex;flex-wrap:wrap;gap:8px}.modal-footer .btn{white-space:normal;flex:1 1 calc(50% - 8px);padding:10px 9px;text-align:center}.modal-footer .btn:last-child{flex-basis:100%}.message-preview-text{min-height:220px;font-size:14px}}
+
+/* Gestão de motoristas — painel administrativo */
+.driver-header{align-items:flex-start;flex-wrap:wrap}
+.driver-stat-strip{display:flex;gap:11px;flex-wrap:wrap;margin-bottom:22px}
+.driver-stat-strip span{font-size:12px;color:#62748a;background:#f4f7fb;border:1px solid #e5ecf3;border-radius:9px;padding:9px 13px}
+.driver-stat-strip strong{color:#21334d;font-size:14px}
+.driver-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.driver-card-top .driver-icon{margin:0}
+.driver-card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:19px;padding-top:14px;border-top:1px solid #e8edf4}
+.driver-list-row{display:flex;gap:16px;justify-content:space-between;align-items:center;padding:16px;border:1px solid #e8edf4;border-radius:13px;margin-bottom:11px}
+.driver-list-person{display:flex;flex-direction:column;gap:5px;min-width:0;overflow-wrap:anywhere}
+.driver-list-person strong{font-size:14px}
+.driver-list-person small{color:#70829c;font-size:12px}
+.driver-list-person .driver-uid{color:#9ca9b7;font-size:10px}
+.driver-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:end}
+.driver-check{display:flex;gap:12px;align-items:flex-start;background:#f0faf6;border:1px solid #d1ede1;border-radius:13px;padding:14px;cursor:pointer}
+.driver-check input{width:20px;height:20px;min-width:20px;margin-top:2px;accent-color:#238d68}
+.driver-check span{display:flex;flex-direction:column;gap:6px}
+.driver-check small{font-weight:400;line-height:1.45;color:#628176}
+.empty-driver{background:#f8fbfd;border:1px dashed #d9e4f1;border-radius:13px;padding:23px;grid-column:1 / -1;color:#66758b;font-size:13px}
+.empty-driver strong{color:#243651}
+@media(max-width:600px){.driver-header .btn{width:100%;white-space:normal}.driver-list-row{align-items:flex-start;flex-direction:column}.driver-actions{justify-content:flex-start;width:100%}.driver-stat-strip span{flex:1 1 auto}.driver-card .btn{white-space:normal}}
