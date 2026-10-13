@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn(){ return request.auth != null; }
+    function profile(){ return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function active(){ return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && profile().active == true; }
+    function admin(){ return active() && profile().role == 'admin'; }
+    function driver(){ return active() && profile().role == 'driver'; }
+    function assigned(d){ return driver() && d.driverId == request.auth.uid; }
+    function deliveryPath(id){ return /databases/$(database)/documents/deliveries/$(id); }
+    match /users/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid || admin();
+      allow list: if admin();
+      // Contas e perfis são criados pela Cloud Function (Admin SDK), não pelo navegador.
+      allow write: if false;
+    }
+    match /deliveries/{deliveryId} {
+      allow get, list: if admin() || assigned(resource.data);
+      allow create, delete: if admin();
+      allow update: if admin() || (
+        assigned(resource.data) &&
+        request.resource.data.driverId == resource.data.driverId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status','startedAt','deliveredAt','lastLocation','routePoints','proof'
+        ]) &&
+        (
+          (resource.data.status == 'pendente' && request.resource.data.status == 'em_rota') ||
+          (resource.data.status == 'em_rota' && request.resource.data.status == 'em_rota' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLocation','routePoints'])) ||
+          (resource.data.status == 'em_rota' && request.resource.data.status == 'entregue'
+             && request.resource.data.keys().hasAll(['proof','deliveredAt'])
+             && request.resource.data.proof.keys().hasAll(['cpf','recipientName','photos','signatureDriveId'])
+             && request.resource.data.proof.cpf is string
+             && request.resource.data.proof.cpf.matches('^[0-9]{11}$')
+             && request.resource.data.proof.signatureDriveId is string
+             && request.resource.data.proof.photos is list
+             && request.resource.data.proof.photos.size() >= 1
+             && request.resource.data.proof.photos.size() <= 4)
+        )
+      );
+    }
+    match /tracking/{trackingToken} {
+      // Token aleatório de 160 bits; não contém dados pessoais nem CPF.
+      allow get: if true;
+      allow list: if false;
+      allow create: if admin() && request.resource.data.keys().hasAll(['deliveryId','code','status']);
+      allow update: if active() && (
+        admin() || (
+          exists(deliveryPath(resource.data.deliveryId)) &&
+          get(deliveryPath(resource.data.deliveryId)).data.driverId == request.auth.uid &&
+          get(deliveryPath(resource.data.deliveryId)).data.trackingToken == trackingToken
+        )
+      ) && request.resource.data.deliveryId == resource.data.deliveryId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status','startedAt','deliveredAt','lastLocation','routePoints'
+        ]);
+      allow delete: if false;
+    }
+    match /nps/{npsToken} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if active() && request.resource.data.keys().hasOnly(['deliveryId','code','createdAt']) &&
+        (admin() || (driver() && getAfter(deliveryPath(request.resource.data.deliveryId)).data.driverId == request.auth.uid &&
+          getAfter(deliveryPath(request.resource.data.deliveryId)).data.npsToken == npsToken &&
+          getAfter(deliveryPath(request.resource.data.deliveryId)).data.status == 'entregue'));
+      // Uma avaliação por link, sem autenticação. Só pode informar a nota e o comentário.
+      allow update: if !resource.data.keys().hasAny(['submittedAt']) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score','comment','submittedAt']) &&
+        request.resource.data.score is int && request.resource.data.score >= 0 && request.resource.data.score <= 10 &&
+        request.resource.data.comment is string && request.resource.data.comment.size() <= 500 &&
+        request.resource.data.submittedAt == request.time;
+      allow delete: if false;
+    }
+    match /{document=**}{ allow read, write: if false; }
+  }
+}
