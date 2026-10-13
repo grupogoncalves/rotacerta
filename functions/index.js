@@ -4,9 +4,12 @@ const {onDocumentUpdated} = require('firebase-functions/v2/firestore');
 const {initializeApp} = require('firebase-admin/app');
 const {getFirestore, FieldValue} = require('firebase-admin/firestore');
 const {getAuth} = require('firebase-admin/auth');
+const {timingSafeEqual} = require('node:crypto');
+const {defineSecret} = require('firebase-functions/params');
 initializeApp();
 const db = getFirestore();
 const REGION='southamerica-east1';
+const ADMIN_SETUP_KEY = defineSecret('ADMIN_SETUP_KEY');
 async function identity(request){
   if(!request.auth?.uid)throw new HttpsError('unauthenticated','Faça login para continuar.');
   const userDoc=await db.collection('users').doc(request.auth.uid).get();
@@ -14,6 +17,33 @@ async function identity(request){
   if(!profile?.active)throw new HttpsError('permission-denied','Usuário inativo.');
   return {uid:request.auth.uid,role:profile.role};
 }
+// Primeira ativação exige uma chave criada pelo proprietário do Firebase (Secret Manager).
+// Uma trava transacional impede que duas contas sejam promovidas simultaneamente.
+exports.setupFirstAdmin = onCall({region:REGION,secrets:[ADMIN_SETUP_KEY],maxInstances:3},async request=>{
+  if(!request.auth?.uid)throw new HttpsError('unauthenticated','Entre com a conta do administrador para ativá-la.');
+  const name=String(request.data?.name||'').trim(),supplied=String(request.data?.setupKey||'');
+  if(name.length<3||name.length>100)throw new HttpsError('invalid-argument','Informe o nome completo (3 a 100 caracteres).');
+  const serverKey=ADMIN_SETUP_KEY.value()||'';
+  if(Buffer.byteLength(serverKey,'utf8')<24)throw new HttpsError('failed-precondition','ADMIN_SETUP_KEY não foi definida no servidor com uma chave forte.');
+  const expected=Buffer.from(serverKey,'utf8'),provided=Buffer.from(supplied,'utf8');
+  if(expected.length!==provided.length||!timingSafeEqual(expected,provided))throw new HttpsError('permission-denied','Chave de ativação inválida.');
+  const user=await getAuth().getUser(request.auth.uid);
+  if(!user.email || user.disabled)throw new HttpsError('failed-precondition','Usuário do Authentication indisponível ou sem e-mail.');
+  const admins=await db.collection('users').where('role','==','admin').limit(1).get();
+  if(!admins.empty)throw new HttpsError('already-exists','Já existe um administrador. Use o login ou solicite acesso ao administrador atual.');
+  const setupRef=db.collection('system').doc('firstAdminActivated');
+  const userRef=db.collection('users').doc(user.uid);
+  await db.runTransaction(async tx=>{
+    const [lock,existing]=await Promise.all([tx.get(setupRef),tx.get(userRef)]);
+    if(lock.exists)throw new HttpsError('already-exists','O primeiro administrador já foi ativado.');
+    if(existing.exists)throw new HttpsError('failed-precondition','Este usuário já tem um perfil.');
+    tx.create(setupRef,{adminUid:user.uid,createdAt:FieldValue.serverTimestamp()});
+    tx.create(userRef,{name,email:user.email.toLowerCase(),role:'admin',active:true,createdAt:FieldValue.serverTimestamp()});
+  });
+  try{await getAuth().updateUser(user.uid,{displayName:name});}catch(err){console.warn('Não foi possível atualizar o nome do Authentication:',err.message);}
+  return {ok:true};
+});
+
 exports.createDriver = onCall({region:REGION},async request=>{
   const u=await identity(request);if(u.role!=='admin')throw new HttpsError('permission-denied','Somente administradores criam motoristas.');
   const name=String(request.data?.name||'').trim(),email=String(request.data?.email||'').trim().toLowerCase(),password=String(request.data?.password||'');
@@ -32,7 +62,6 @@ exports.syncNps = onDocumentUpdated({document:'nps/{token}',region:REGION},async
 });
 
 // Google Drive privado via Apps Script. Segredos SOMENTE no backend.
-const {defineSecret} = require('firebase-functions/params');
 const DRIVE_BRIDGE_URL = defineSecret('DRIVE_BRIDGE_URL');
 const DRIVE_BRIDGE_KEY = defineSecret('DRIVE_BRIDGE_KEY');
 const LIMIT = 5*1024*1024;
